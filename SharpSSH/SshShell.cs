@@ -46,10 +46,18 @@ namespace Tamir.SharpSsh
     {
         private Stream m_sshIO = null;
         private Regex m_expectPattern;
-        private bool m_removeTerminalChars = false;
-        private bool m_redirectToConsole = false;
-        private Dictionary<int, string> m_localMappedPorts = new Dictionary<int, string>();
-        private static string escapeCharsPattern = "\\[[0-9;?]*[^0-9;]";
+        private bool m_removeTerminalChars;
+        private bool m_redirectToConsole;
+        private Dictionary<int, string> m_localMappedPorts;
+        private static string escapeCharsPattern;
+
+        public static SshExec Clone(SshBase baseConnection)
+        {
+            var exec = new SshExec(baseConnection.Host, baseConnection.Username, baseConnection.Password);
+            exec.Session = baseConnection.Session;
+
+            return exec;
+        }
 
         public SshShell(string host, string user, string password)
             : base(host, user, password)
@@ -65,6 +73,11 @@ namespace Tamir.SharpSsh
 
         protected void Init()
         {
+            m_removeTerminalChars = false;
+            m_redirectToConsole = false;
+
+            m_localMappedPorts = new Dictionary<int, string>();
+            escapeCharsPattern = "\\[[0-9;?]*[^0-9;]";
             ExpectPattern = "";
             m_removeTerminalChars = false;
         }

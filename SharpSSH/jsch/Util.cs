@@ -285,9 +285,8 @@ namespace Tamir.SharpSsh.jsch
                 tmp.Join(timeout);
                 message = "timeout: ";
             }
-            catch (ThreadInterruptedException eee)
-            {
-            }
+            catch (ThreadInterruptedException) { }
+
             if (sockp[0] != null && sockp[0].isConnected())
             {
                 socket = sockp[0];

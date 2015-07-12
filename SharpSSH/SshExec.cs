@@ -52,6 +52,14 @@ namespace Tamir.SharpSsh
         {
         }
 
+        public static SshExec Clone(SshBase baseConnection)
+        {
+            var exec = new SshExec(baseConnection.Host, baseConnection.Username, baseConnection.Password);
+            exec.Session = baseConnection.Session;
+
+            return exec;
+        }
+
         protected override string ChannelType
         {
             get { return "exec"; }
@@ -86,7 +94,7 @@ namespace Tamir.SharpSsh
             ((ChannelExec) m_channel).setPty(pty);
 
             if (!sep.HasValue)
-                sep = Convert.ToByte(" "); // new String(' ', 1)  as byte;
+                sep = Byte.Parse("32");
 
             return StreamASCII(sep.Value, m_channel);
         }

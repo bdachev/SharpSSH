@@ -28,6 +28,15 @@ namespace Tamir.SharpSsh.Wrappers
             sftp.Connect();
         }
 
+        public static SFTPUtil Clone(SshBase baseConnection)
+        {
+            var clone = new SFTPUtil(baseConnection.Host, baseConnection.Username, baseConnection.Password);
+            clone.sftp.Session = baseConnection.Session;
+
+            return clone;
+        }
+
+
         public IProxy Proxy
         {
             get { return sftp.Proxy; }
@@ -48,6 +57,8 @@ namespace Tamir.SharpSsh.Wrappers
         }
 
         #endregion
+
+        #region Files operations
 
         public IList<ChannelSftp.LsEntry> ListFiles(String remotePath)
         {
@@ -86,6 +97,8 @@ namespace Tamir.SharpSsh.Wrappers
         {
             sftp.RenameFile(oldPath, newPath);
         }
+
+        #endregion
 
         public void ExecuteCommand(String command)
         {

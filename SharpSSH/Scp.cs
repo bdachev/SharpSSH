@@ -59,6 +59,8 @@ namespace Tamir.SharpSsh
         public static Scp Clone(SshBase baseConnection)
         {
             var clone = new Scp(baseConnection.Host, baseConnection.Username, baseConnection.Password);
+            clone.Session = baseConnection.Session;
+
             return clone;
         }
 

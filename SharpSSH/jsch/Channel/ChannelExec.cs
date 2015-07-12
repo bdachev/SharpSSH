@@ -77,7 +77,7 @@ namespace Tamir.SharpSsh.jsch
                 request = new RequestExec(command);
                 request.request(session, this);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new JSchException("ChannelExec");
             }

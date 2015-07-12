@@ -11,9 +11,9 @@ namespace sharpSshTest.sharpssh_samples
 	{
 		public static void RunExample()
 		{
-			try
-			{
-				SshConnectionInfo input = Util.GetInput();
+            SshConnectionInfo input = Util.GetInput();
+            try
+            {
 				SshExec exec = new SshExec(input.Host, input.User);
 				if(input.Pass != null) exec.Password = input.Pass;
 				if(input.IdentityFile != null) exec.AddIdentityFile( input.IdentityFile );

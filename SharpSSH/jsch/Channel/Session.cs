@@ -373,7 +373,7 @@ namespace Tamir.SharpSsh.jsch
                                 auth = us.start(this);
                                 auth_cancel = false;
                             }
-                            catch (JSchAuthCancelException ee)
+                            catch (JSchAuthCancelException)
                             {
                                 auth_cancel = true;
                             }
@@ -1405,7 +1405,7 @@ namespace Tamir.SharpSsh.jsch
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //System.Console.WriteLine("# Session.run");
                 //e.printStackTrace();
@@ -1419,7 +1419,7 @@ namespace Tamir.SharpSsh.jsch
                 //System.Console.WriteLine("@1");
                 //e.printStackTrace();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //System.Console.WriteLine("@2");
                 //e.printStackTrace();
@@ -1486,12 +1486,13 @@ namespace Tamir.SharpSsh.jsch
                     proxy = null;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //      e.printStackTrace();
             }
             io = null;
             socket = null;
+
             //    lock(jsch.pool){
             //      jsch.pool.removeElement(this);
             //    }
@@ -1618,9 +1619,8 @@ namespace Tamir.SharpSsh.jsch
                 {
                     Thread.Sleep(10000);
                 }
-                catch (Exception e)
-                {
-                }
+                catch (Exception) { }
+
                 int reply = grr.getReply();
                 grr.setThread(null);
                 if (reply == 0)

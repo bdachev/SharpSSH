@@ -87,7 +87,7 @@ namespace Tamir.SharpSsh.jsch
             {
                 for (int i = 0; i < pool.Count; i++)
                 {
-                    Channel c = (Channel) (pool[i]);
+                    Channel c = (Channel)(pool[i]);
                     if (c.id == id && c.session == session) return c;
                 }
             }
@@ -168,7 +168,7 @@ namespace Tamir.SharpSsh.jsch
                 // uint32 initial window size  // 0x100000(65536)
                 // uint32 maxmum packet size   // 0x4000(16384)
                 packet.reset();
-                buf.putByte((byte) 90);
+                buf.putByte((byte)90);
                 buf.putString(this.type);
                 buf.putInt(this.id);
                 buf.putInt(this.lwsize);
@@ -184,9 +184,8 @@ namespace Tamir.SharpSsh.jsch
                     {
                         Thread.Sleep(50);
                     }
-                    catch (Exception ee)
-                    {
-                    }
+                    catch (Exception) { }
+
                     retry--;
                 }
                 if (!session.isConnected())
@@ -203,7 +202,7 @@ namespace Tamir.SharpSsh.jsch
             catch (Exception e)
             {
                 connected = false;
-                if (e is JSchException) throw (JSchException) e;
+                if (e is JSchException) throw (JSchException)e;
             }
         }
 
@@ -261,7 +260,7 @@ namespace Tamir.SharpSsh.jsch
         {
             PipedInputStream In =
                 new MyPipedInputStream(
-                    32*1024 // this value should be customizable.
+                    32 * 1024 // this value should be customizable.
                     );
             io.setOutputStream(new PassiveOutputStream(In), false);
             return In;
@@ -271,7 +270,7 @@ namespace Tamir.SharpSsh.jsch
         {
             PipedInputStream In =
                 new MyPipedInputStream(
-                    32*1024 // this value should be customizable.
+                    32 * 1024 // this value should be customizable.
                     );
             io.setExtOutputStream(new PassiveOutputStream(In), false);
             return In;
@@ -281,7 +280,7 @@ namespace Tamir.SharpSsh.jsch
         {
             PipedOutputStream Out = new PipedOutputStream();
             io.setInputStream(new PassiveInputStream(Out
-                                                     , 32*1024
+                                                     , 32 * 1024
                                   ), false);
             //  io.setInputStream(new PassiveInputStream(Out), false);
             return Out;
@@ -359,9 +358,7 @@ namespace Tamir.SharpSsh.jsch
                 //    if(io.outs!=null)
                 io.put(foo, s, l);
             }
-            catch (NullReferenceException e)
-            {
-            }
+            catch (NullReferenceException) { }
         }
 
         internal virtual void write_ext(byte[] foo, int s, int l)
@@ -371,9 +368,7 @@ namespace Tamir.SharpSsh.jsch
                 //    if(io.out_ext!=null)
                 io.put_ext(foo, s, l);
             }
-            catch (NullReferenceException e)
-            {
-            }
+            catch (NullReferenceException) { }
         }
 
         internal virtual void eof_remote()
@@ -387,12 +382,8 @@ namespace Tamir.SharpSsh.jsch
                     io.outs = null;
                 }
             }
-            catch (NullReferenceException e)
-            {
-            }
-            catch (IOException e)
-            {
-            }
+            catch (NullReferenceException) { }
+            catch (IOException) { }
         }
 
         internal virtual void eof()
@@ -405,13 +396,11 @@ namespace Tamir.SharpSsh.jsch
                 Buffer buf = new Buffer(100);
                 Packet packet = new Packet(buf);
                 packet.reset();
-                buf.putByte((byte) Session.SSH_MSG_CHANNEL_EOF);
+                buf.putByte((byte)Session.SSH_MSG_CHANNEL_EOF);
                 buf.putInt(getRecipient());
                 session.write(packet);
             }
-            catch (Exception e)
-            {
-            }
+            catch (Exception) { }
         }
 
         /*
@@ -460,11 +449,11 @@ namespace Tamir.SharpSsh.jsch
                 Buffer buf = new Buffer(100);
                 Packet packet = new Packet(buf);
                 packet.reset();
-                buf.putByte((byte) Session.SSH_MSG_CHANNEL_CLOSE);
+                buf.putByte((byte)Session.SSH_MSG_CHANNEL_CLOSE);
                 buf.putInt(getRecipient());
                 session.write(packet);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //e.printStackTrace();
             }
@@ -486,15 +475,13 @@ namespace Tamir.SharpSsh.jsch
                 {
                     try
                     {
-                        Channel c = ((Channel) (pool[i]));
+                        Channel c = ((Channel)(pool[i]));
                         if (c.session == session)
                         {
                             channels[count++] = c;
                         }
                     }
-                    catch (Exception e)
-                    {
-                    }
+                    catch (Exception) { }
                 }
             }
             for (int i = 0; i < count; i++)
@@ -525,7 +512,7 @@ namespace Tamir.SharpSsh.jsch
                     io.close();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //e.printStackTrace();
             }

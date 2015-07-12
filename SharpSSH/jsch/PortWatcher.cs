@@ -83,7 +83,7 @@ namespace Tamir.SharpSsh.jsch
             }
             catch (Exception e)
             {
-                throw new JSchException("PortForwardingL: local port " + address + ":" + lport + " cannot be bound.");
+                throw new JSchException("PortForwardingL: local port " + address + ":" + lport + " cannot be bound.", e);
             }
         }
 
@@ -237,9 +237,7 @@ namespace Tamir.SharpSsh.jsch
                     }
                 }
             }
-            catch (Exception e)
-            {
-            }
+            catch (Exception) { }
 
             Delete();
         }
@@ -254,9 +252,7 @@ namespace Tamir.SharpSsh.jsch
 
                 ss = null;
             }
-            catch (Exception e)
-            {
-            }
+            catch (Exception) { }
         }
     }
 }

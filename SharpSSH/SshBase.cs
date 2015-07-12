@@ -46,13 +46,14 @@ namespace Tamir.SharpSsh
     public abstract class SshBase : IDisposable
     {
         public static Version Version { get { return Assembly.GetAssembly(typeof(SshBase)).GetName().Version; } }
-        public Session Session {[DebuggerStepThrough] get { return m_session; } }
+        public Session Session {[DebuggerStepThrough] get { return m_session; } set { m_session = value; } }
         public Channel Channel {[DebuggerStepThrough] get { return m_channel; } }
 
         protected string m_host;
         protected string m_user;
         protected string m_pass;
         protected JSch m_jsch;
+
         protected Session m_session;
         protected Channel m_channel;
         protected HostKeyCheckType m_checkType = HostKeyCheckType.NoCheck;
@@ -176,7 +177,7 @@ namespace Tamir.SharpSsh
                 if (m_userInfo == null)
                     m_userInfo = new DisconnectedKeyboardInteractiveUserInfo(Password);
                 else
-                    throw new InvalidDataException("Cannot combine a predefined 'UserInfo' object with a predefined 'Password' value."); 
+                    throw new InvalidDataException("Cannot combine a predefined 'UserInfo' object with a predefined 'Password' value.");
             }
 
             m_session.setUserInfo(m_userInfo);
@@ -234,14 +235,15 @@ namespace Tamir.SharpSsh
             byte[] buff = new byte[1024];
             object l = new object();
 
-            return delegate() {
-                lock(l)
+            return delegate ()
+            {
+                lock (l)
                 {
-                    if(buff == null)
+                    if (buff == null)
                         return null;
 
                     int count = s.Read(buff, 0, 1024);
-                    if(count <= 0)
+                    if (count <= 0)
                     {
                         buff = null;
                         return null;
@@ -264,10 +266,10 @@ namespace Tamir.SharpSsh
         /// <returns></returns>
         protected IEnumerator<string> StreamASCII(Channel chan)
         {
-            if(chan == null)
+            if (chan == null)
                 throw new ArgumentNullException("chan");
 
-            if(chan.connected)
+            if (chan.connected)
                 throw new InvalidOperationException("The channel must not be connected when StreamASCII is called.");
 
             Stream s = chan.getInputStream();
@@ -278,7 +280,7 @@ namespace Tamir.SharpSsh
                 var fn = StreamResults(s);
                 byte[] buff;
 
-                while((buff = fn()) != null)
+                while ((buff = fn()) != null)
                     yield return Encoding.ASCII.GetString(buff);
             }
             finally
@@ -301,27 +303,29 @@ namespace Tamir.SharpSsh
         /// <returns></returns>
         protected IEnumerator<string> StreamASCII(byte sep, Channel chan)
         {
-            if(chan == null)
+            if (chan == null)
                 throw new ArgumentNullException("chan");
 
-            if(chan.connected)
+            if (chan.connected)
                 throw new InvalidOperationException("The channel must not be connected when StreamASCII is called.");
 
-            Stream s = chan.getInputStream();
-            chan.connect();
+            Stream s = null;
 
             try
             {
+                s = chan.getInputStream();
+                chan.connect();
+
                 var res = new StringBuilder();
                 var fn = StreamResults(s);
                 byte[] buff;
 
-                while((buff = fn()) != null)
+                while ((buff = fn()) != null)
                 {
                     int upTo;
-                    if((upTo = Array.IndexOf(buff, sep) + 1) != 0)
+                    if ((upTo = Array.IndexOf(buff, sep) + 1) != 0)
                     {
-                        if(res.Length > 0)
+                        if (res.Length > 0)
                         {
                             res.Append(Encoding.ASCII.GetString(buff, 0, upTo));
                             yield return res.ToString();
@@ -330,16 +334,16 @@ namespace Tamir.SharpSsh
                         else
                             yield return Encoding.ASCII.GetString(buff, 0, upTo);
 
-                        if(upTo < buff.Length)
+                        if (upTo < buff.Length)
                         {
                             int currUpTo = 0;
-                            while((currUpTo = Array.IndexOf(buff, sep, upTo) + 1) != 0)
+                            while ((currUpTo = Array.IndexOf(buff, sep, upTo) + 1) != 0)
                             {
                                 yield return Encoding.ASCII.GetString(buff, upTo, currUpTo - upTo);
                                 upTo = currUpTo;
                             }
 
-                            if(upTo < buff.Length)
+                            if (upTo < buff.Length)
                                 res.Append(Encoding.ASCII.GetString(buff, upTo, buff.Length - upTo));
                         }
                     }
@@ -347,7 +351,7 @@ namespace Tamir.SharpSsh
                         res.Append(Encoding.ASCII.GetString(buff, 0, buff.Length));
                 }
 
-                if(res.Length > 0)
+                if (res.Length > 0)
                     yield return res.ToString();
             }
             finally
@@ -553,7 +557,7 @@ namespace Tamir.SharpSsh
         }
     }
 
-    public enum HostKeyCheckType 
+    public enum HostKeyCheckType
     {
         AskUser,
         ForceMatch,

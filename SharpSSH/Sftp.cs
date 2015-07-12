@@ -56,6 +56,14 @@ namespace Tamir.SharpSsh
             Init();
         }
 
+        public static Sftp Clone(SshBase baseConnection)
+        {
+            var clone = new Sftp(baseConnection.Host, baseConnection.Username, baseConnection.Password);
+            clone.Session = baseConnection.Session;
+
+            return clone;
+        }
+
         private void Init()
         {
             m_monitor = new MyProgressMonitor(this);

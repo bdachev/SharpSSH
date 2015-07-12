@@ -160,9 +160,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\SharpSSH\SharpSSH.csproj">
       <Project>{d27cf69d-4681-492a-be4d-d3d209104423}</Project>
       <Name>SharpSSH</Name>
