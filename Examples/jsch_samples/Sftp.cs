@@ -89,12 +89,12 @@ namespace sharpSshTest.jsch_samples
 					String cmd=(String)cmds[0];
 					if(cmd.Equals("quit"))
 					{
-						c.quit();
+                        c.disconnect(); // c.quit();
 						break;
 					}
 					if(cmd.Equals("exit"))
 					{
-						c.exit();
+                        c.disconnect(); // .exit();
 						break;
 					}
 					if(cmd.Equals("rekey"))

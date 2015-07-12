@@ -25,9 +25,9 @@ namespace sharpSshTest.sharpssh_samples
 
 				if(input.Pass != null) sshCp.Password = input.Pass;
 				if(input.IdentityFile != null) sshCp.AddIdentityFile( input.IdentityFile );
-				sshCp.OnTransferStart += new FileTransferEvent(sshCp_OnTransferStart);
-				sshCp.OnTransferProgress += new FileTransferEvent(sshCp_OnTransferProgress);
-				sshCp.OnTransferEnd += new FileTransferEvent(sshCp_OnTransferEnd);
+				//sshCp.OnTransferStart += new FileTransferEvent(sshCp_OnTransferStart);
+				//sshCp.OnTransferProgress += new FileTransferEvent(sshCp_OnTransferProgress);
+				//sshCp.OnTransferEnd += new FileTransferEvent(sshCp_OnTransferEnd);
 
 				Console.Write("Connecting...");
 				sshCp.Connect();

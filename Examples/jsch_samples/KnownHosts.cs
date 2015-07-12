@@ -30,11 +30,13 @@ namespace sharpSshTest.jsch_samples
 				Console.WriteLine("You chose "+file+".");
 				//Create a new JSch instance
 				JSch jsch=new JSch();
-				//Set the known hosts file
-				jsch.setKnownHosts(file);				
 
-				//Get the KnownHosts repository from JSchs
-				HostKeyRepository hkr=jsch.getHostKeyRepository();
+                //Set the known hosts file
+                var hkr = jsch.getHostKeyRepository();
+                hkr.setKnownHosts(file);				
+
+				// Get the KnownHosts repository from JSchs
+				// HostKeyRepository hkr=jsch.getHostKeyRepository();
 
 				//Print all known hosts and keys
 				HostKey[] hks=hkr.getHostKey();
