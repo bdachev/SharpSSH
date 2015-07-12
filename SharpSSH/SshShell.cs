@@ -249,6 +249,7 @@ namespace Tamir.SharpSsh
 			str = Regex.Replace(str, escapeCharsPattern, "");
 			str = str.Replace(((char)15).ToString(), "");
 			str = Regex.Replace(str, ((char)27)+"=*", "");
+
 			//str = Regex.Replace(str, "\\s*\r\n", "\r\n");
 			return str;
 		}

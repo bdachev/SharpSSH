@@ -57,3 +57,4 @@ deploy/*
 
 # Visual Basic 6 excludes
 *.vbw
+packages/Org.Mentalis.Security.1.0.0/

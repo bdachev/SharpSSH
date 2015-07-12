@@ -2,14 +2,14 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>8.0.30319</ProductVersion>
+    <ProductVersion>7.10.3077</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D27CF69D-4681-492A-BE4D-D3D209104423}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>App.ico</ApplicationIcon>
     <AssemblyKeyContainerName />
-    <AssemblyName>Tamir.SharpSSH</AssemblyName>
+    <AssemblyName>SharpSSH</AssemblyName>
     <AssemblyOriginatorKeyFile />
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
@@ -18,12 +18,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Tamir.SharpSsh</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <StartupObject />
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <OldToolsVersion>0.0</OldToolsVersion>
-    <UpgradeBackupLocation />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -39,9 +35,10 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\bin\lib\Debug\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
@@ -60,48 +57,15 @@
     <DebugType>full</DebugType>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\bin\lib\Release\</OutputPath>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile />
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile />
-    <DebugSymbols>false</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
-    <NoStdLib>false</NoStdLib>
-    <NoWarn />
-    <Optimize>true</Optimize>
-    <RegisterForComInterop>false</RegisterForComInterop>
-    <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <DebugType>none</DebugType>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DiffieHellman">
-      <Name>DiffieHellman</Name>
-      <HintPath>lib\DiffieHellman.dll</HintPath>
-    </Reference>
     <Reference Include="Org.Mentalis.Security">
-      <Name>Org.Mentalis.Security</Name>
-      <HintPath>lib\Org.Mentalis.Security.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Org.Mentalis.Security.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Name>System</Name>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
@@ -111,6 +75,9 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ConsoleProgressBar.cs" />
+    <Compile Include="GenericSftpInputStream.cs" />
+    <Compile Include="GenericSftpOutputStream.cs" />
     <Compile Include="ITransferProtocol.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -189,46 +156,43 @@
     <Compile Include="java\util\Vector.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Buffer.cs">
+    <Compile Include="jsch\Request\Buffer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Channel.cs">
+    <Compile Include="jsch\Channel\Channel.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Channel.old.cs">
+    <Compile Include="jsch\Channel\ChannelDirectTCPIP.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelDirectTCPIP.cs">
+    <Compile Include="jsch\Channel\ChannelExec.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelExec.cs">
+    <Compile Include="jsch\Channel\ChannelForwardedTCPIP.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelForwardedTCPIP.cs">
+    <Compile Include="jsch\Channel\ChannelSession.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelSession.cs">
+    <Compile Include="jsch\Channel\ChannelSftp.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelSftp.cs">
+    <Compile Include="jsch\Channel\ChannelSftpStreamGet.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelSftpStreamGet.cs">
+    <Compile Include="jsch\Channel\ChannelSftpStreamPut.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelSftpStreamPut.cs">
+    <Compile Include="jsch\Channel\ChannelShell.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelShell.cs">
+    <Compile Include="jsch\Channel\ChannelSubsystem.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelSubsystem.cs">
+    <Compile Include="jsch\Channel\ChannelX11.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\ChannelX11.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Cipher.cs">
+    <Compile Include="jsch\Request\Cipher.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\Compression.cs">
@@ -243,48 +207,6 @@
     <Compile Include="jsch\DHGEX.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\examples\AES.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\ChangePassphrase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\KeyGen.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\KnownHosts.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\PortForwardingL.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\PortForwardingR.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\ScpFrom.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\ScpTo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\Sftp.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\Shell.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\StreamForwarding.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\UserAuthPubKey.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\util\ConsoleProgressBar.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\examples\util\InputForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="jsch\ForwardedTCPIPDaemon.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -297,10 +219,10 @@
     <Compile Include="jsch\HostKeyRepository.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Identity.cs">
+    <Compile Include="jsch\Request\Identity.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\IdentityFile.cs">
+    <Compile Include="jsch\Request\IdentityFile.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\IO.cs">
@@ -363,22 +285,22 @@
     <Compile Include="jsch\JSchPartialAuthException.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\KeyExchange.cs">
+    <Compile Include="jsch\Request\KeyExchange.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\KeyPair.cs">
+    <Compile Include="jsch\Request\KeyPair.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\KeyPairDSA.cs">
+    <Compile Include="jsch\Request\KeyPairDSA.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\KeyPairGenDSA.cs">
+    <Compile Include="jsch\Request\KeyPairGenDSA.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\KeyPairGenRSA.cs">
+    <Compile Include="jsch\Request\KeyPairGenRSA.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\KeyPairRSA.cs">
+    <Compile Include="jsch\Request\KeyPairRSA.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\KnownHosts.cs">
@@ -402,37 +324,37 @@
     <Compile Include="jsch\Random.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Request.cs">
+    <Compile Include="jsch\Request\Request.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestExec.cs">
+    <Compile Include="jsch\Request\RequestExec.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestPtyReq.cs">
+    <Compile Include="jsch\Request\RequestPtyReq.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestSftp.cs">
+    <Compile Include="jsch\Request\RequestSftp.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestShell.cs">
+    <Compile Include="jsch\Request\RequestShell.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestSignal.cs">
+    <Compile Include="jsch\Request\RequestSignal.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestSubsystem.cs">
+    <Compile Include="jsch\Request\RequestSubsystem.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestWindowChange.cs">
+    <Compile Include="jsch\Request\RequestWindowChange.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\RequestX11.cs">
+    <Compile Include="jsch\Request\RequestX11.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\ServerSocketFactory.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Session.cs">
+    <Compile Include="jsch\Channel\Session.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\SftpATTRS.cs">
@@ -456,22 +378,22 @@
     <Compile Include="jsch\UIKeyboardInteractive.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\UserAuth.cs">
+    <Compile Include="jsch\User\UserAuth.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\UserAuthKeyboardInteractive.cs">
+    <Compile Include="jsch\User\UserAuthKeyboardInteractive.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\UserAuthNone.cs">
+    <Compile Include="jsch\User\UserAuthNone.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\UserAuthPassword.cs">
+    <Compile Include="jsch\User\UserAuthPassword.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\UserAuthPublicKey.cs">
+    <Compile Include="jsch\User\UserAuthPublicKey.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\UserInfo.cs">
+    <Compile Include="jsch\User\UserInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\Util.cs">
@@ -486,9 +408,11 @@
     <Compile Include="SshBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SshConnectionInfo.cs" />
     <Compile Include="SshExe.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SshHelper.cs" />
     <Compile Include="SshShell.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -520,27 +444,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Content Include="App.ico" />
-    <Content Include="jsch\examples\README.txt" />
-    <EmbeddedResource Include="jsch\examples\util\InputForm.resx">
-      <DependentUpon>InputForm.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

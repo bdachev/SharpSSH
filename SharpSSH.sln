@@ -1,8 +1,18 @@
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.22823.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpSSH", "SharpSSH\SharpSSH.csproj", "{D27CF69D-4681-492A-BE4D-D3D209104423}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Examples.csproj", "{327E25D4-D8DF-4704-ABA3-274F8E777847}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleTestSSH", "Examples\ExampleTestSSH.csproj", "{7B5CE881-3379-45C9-A1ED-8E2D0FCA1462}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FE8CBFEE-E873-489B-99A1-D399C861F78F}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,12 +22,16 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D27CF69D-4681-492A-BE4D-D3D209104423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D27CF69D-4681-492A-BE4D-D3D209104423}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D27CF69D-4681-492A-BE4D-D3D209104423}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D27CF69D-4681-492A-BE4D-D3D209104423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D27CF69D-4681-492A-BE4D-D3D209104423}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{D27CF69D-4681-492A-BE4D-D3D209104423}.Release|Any CPU.Build.0 = Debug|Any CPU
 		{327E25D4-D8DF-4704-ABA3-274F8E777847}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{327E25D4-D8DF-4704-ABA3-274F8E777847}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{327E25D4-D8DF-4704-ABA3-274F8E777847}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{327E25D4-D8DF-4704-ABA3-274F8E777847}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B5CE881-3379-45C9-A1ED-8E2D0FCA1462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B5CE881-3379-45C9-A1ED-8E2D0FCA1462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B5CE881-3379-45C9-A1ED-8E2D0FCA1462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B5CE881-3379-45C9-A1ED-8E2D0FCA1462}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

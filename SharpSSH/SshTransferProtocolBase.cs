@@ -52,12 +52,12 @@ namespace Tamir.SharpSsh
 		public abstract void Put(string fromFilePath, string toFilePath);
 		public abstract void Mkdir(string directory);
 		public abstract void Cancel();
-		public abstract void Delete(string path);
+        public abstract void Delete(string path);
 
-		/// <summary>
-		/// Triggered when transfer is starting
-		/// </summary>
-		public event FileTransferEvent OnTransferStart;
+        /// <summary>
+        /// Triggered when transfer is starting
+        /// </summary>
+        public event FileTransferEvent OnTransferStart;
 		/// <summary>
 		/// Triggered when transfer ends
 		/// </summary>

@@ -88,32 +88,30 @@ namespace Tamir.SharpSsh
 			return res.ToString();
 		}
 
-        public int RunCommand(string command, ref string StdOut, ref string StdErr)
-        {
-            StdOut = "";
-            StdErr = "";
-            m_channel = GetChannelExec(command);
-            System.IO.Stream stdout = m_channel.getInputStream();
-            System.IO.Stream stderr = ((ChannelExec)m_channel).getErrStream();
-            m_channel.connect();
-            byte[] buff = new byte[1024];
-            StringBuilder sbStdOut = new StringBuilder();
-            StringBuilder sbStdErr = new StringBuilder();
-            int o = 0; int e = 0;
-            while (true)
-            {
-                if (o != -1) o = stdout.Read(buff, 0, buff.Length);
-                if (o != -1) sbStdOut.Append(Encoding.ASCII.GetString(buff, 0, o));
-                if (e != -1) e = stderr.Read(buff, 0, buff.Length);
-                if (e != -1) sbStdErr.Append(Encoding.ASCII.GetString(buff, 0, e));
-                if ((o == -1) && (e == -1)) break;
-            }
-            m_channel.disconnect();
-            StdOut = sbStdOut.ToString();
-            StdErr = sbStdErr.ToString();
+		public int RunCommand(string command, ref string StdOut, ref string StdErr)
+		{
+			StdOut = "";
+			StdErr = "";
+			m_channel = GetChannelExec(command);
+			System.IO.Stream stdout = m_channel.getInputStream();
+			System.IO.Stream stderr = ((ChannelExec)m_channel).getErrStream();
+			m_channel.connect();
+			byte[] buff = new byte[1024];
+			StringBuilder sbStdOut = new StringBuilder();
+			StringBuilder sbStdErr = new StringBuilder();
+			int o=0; int e=0;
+			while(true)
+			{
+				if(o!=-1) o = stdout.Read(buff, 0, buff.Length);
+				if(o!=-1) StdOut += sbStdOut.Append(Encoding.ASCII.GetString(buff, 0, o));
+				if(e!=-1) e = stderr.Read(buff, 0, buff.Length);
+				if(e!=-1) StdErr += sbStdErr.Append(Encoding.ASCII.GetString(buff, 0, e));
+				if((o==-1)&&(e==-1)) break;
+			}
+			m_channel.disconnect();
 
-            return m_channel.getExitStatus();
-        }
+			return m_channel.getExitStatus();
+		}
 
 		public ChannelExec ChannelExec
 		{

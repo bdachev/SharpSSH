@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Tamir.SharpSsh.jsch;
 using System.Collections;
 
@@ -101,6 +102,12 @@ namespace Tamir.SharpSsh
 			SftpChannel.get(fromFilePath, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
 		}
 
+        public void GetWithStream(string fromFilePath, Tamir.SharpSsh.java.io.OutputStream stream)
+        {
+            cancelled = false;
+            SftpChannel.get(fromFilePath, stream, m_monitor);
+        }
+
 		//Put
 
 		public void Put(string fromFilePath)
@@ -130,6 +137,12 @@ namespace Tamir.SharpSsh
 			SftpChannel.put(fromFilePath, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
 		}
 
+        public void PutWithStream(Tamir.SharpSsh.java.io.InputStream stream, string toDirPath)
+        {
+            cancelled = false;
+            SftpChannel.put(stream, toDirPath, m_monitor) ;
+        }
+
 		//MkDir
 
 		public override  void Mkdir(string directory)
@@ -139,24 +152,41 @@ namespace Tamir.SharpSsh
 
 		//Ls
 
-		public ArrayList GetFileList(string path)
+		public List<String> GetFileList(string path)
 		{
-			ArrayList list = new ArrayList();
+			List<String> list = new List<string>();
 			foreach(Tamir.SharpSsh.jsch.ChannelSftp.LsEntry entry in SftpChannel.ls(path))
 			{
-				list.Add(entry.getFilename().ToString());
+			    var filename = entry.getFilename().ToString();
+			    if (filename == "." || filename == "..") 
+                    continue;
+				list.Add(filename);
 			}
 			return list;
 		}
 
-		public override void Delete(string path)
-		{
-			SftpChannel.rm(path);
-		}
+        //rm
 
-		#region ProgressMonitor Implementation
+        public void DeleteFile(string path)
+        {
+            SftpChannel.rm(path);
+        }
 
-		private class MyProgressMonitor : SftpProgressMonitor
+        // GetWorkingDirectory
+
+        public string GetWorkingDirectory()
+        {
+            return SftpChannel.pwd();
+        }
+
+        public override void Delete(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        #region ProgressMonitor Implementation
+
+        private class MyProgressMonitor : SftpProgressMonitor
 		{
 			private long transferred = 0;
 			private long total = 0;
@@ -202,9 +232,12 @@ namespace Tamir.SharpSsh
 			}
 			public override void end()
 			{
-				timer.Stop();
-				timer.Dispose();
-				string note = ("Done in " + elapsed + " seconds!");
+			    if (timer != null)
+			    {
+			        timer.Stop();
+			        timer.Dispose();
+			    }
+			    string note = ("Done in " + elapsed + " seconds!");
 				m_sftp.SendEndMessage(src, dest, (int)transferred, (int)total, note);
 				transferred = 0;
 				total = 0;
@@ -218,7 +251,7 @@ namespace Tamir.SharpSsh
 				this.elapsed++;
 			}
 		}
-
+        
 		#endregion ProgressMonitor Implementation
 	}	
 }
