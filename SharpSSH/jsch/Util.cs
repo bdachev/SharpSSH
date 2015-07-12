@@ -1,5 +1,9 @@
 using System;
+using System.Collections;
+using System.Text;
 using System.Threading;
+using Tamir.SharpSsh.java;
+using Tamir.SharpSsh.java.net;
 
 namespace Tamir.SharpSsh.jsch
 {
@@ -35,7 +39,6 @@ namespace Tamir.SharpSsh.jsch
 
     public class Util
     {
-
         /// <summary>
         /// Converts a time_t to DateTime
         /// </summary>
@@ -45,7 +48,8 @@ namespace Tamir.SharpSsh.jsch
             return DateTime.FromFileTimeUtc(win32FileTime).ToLocalTime();
         }
 
-        private static byte[] b64 = System.Text.Encoding.Default.GetBytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
+        private static byte[] b64 = Encoding.Default.GetBytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
+
         private static byte val(byte foo)
         {
             if (foo == '=') return 0;
@@ -55,6 +59,7 @@ namespace Tamir.SharpSsh.jsch
             }
             return 0;
         }
+
         internal static byte[] fromBase64(byte[] buf, int start, int length)
         {
             byte[] foo = new byte[length];
@@ -63,9 +68,17 @@ namespace Tamir.SharpSsh.jsch
             for (int i = start; i < start + length; i += 4)
             {
                 foo[j] = (byte)((val(buf[i]) << 2) | ((val(buf[i + 1]) & 0x30) >> 4));
-                if (buf[i + 2] == (byte)'=') { j++; break; }
+                if (buf[i + 2] == (byte)'=')
+                {
+                    j++;
+                    break;
+                }
                 foo[j + 1] = (byte)(((val(buf[i + 1]) & 0x0f) << 4) | ((val(buf[i + 2]) & 0x3c) >> 2));
-                if (buf[i + 3] == (byte)'=') { j += 2; break; }
+                if (buf[i + 3] == (byte)'=')
+                {
+                    j += 2;
+                    break;
+                }
                 foo[j + 2] = (byte)(((val(buf[i + 2]) & 0x03) << 6) | (val(buf[i + 3]) & 0x3f));
                 j += 3;
             }
@@ -73,9 +86,9 @@ namespace Tamir.SharpSsh.jsch
             Array.Copy(foo, 0, bar, 0, j);
             return bar;
         }
+
         internal static byte[] toBase64(byte[] buf, int start, int length)
         {
-
             byte[] tmp = new byte[length * 2];
             int i, j, k;
 
@@ -122,8 +135,8 @@ namespace Tamir.SharpSsh.jsch
 
         internal static String[] split(String foo, String split)
         {
-            byte[] buf = Util.getBytes(foo);
-            System.Collections.ArrayList bar = new System.Collections.ArrayList();
+            byte[] buf = getBytes(foo);
+            ArrayList bar = new ArrayList();
             int start = 0;
             int index;
             while (true)
@@ -131,11 +144,11 @@ namespace Tamir.SharpSsh.jsch
                 index = foo.IndexOf(split, start);
                 if (index >= 0)
                 {
-                    bar.Add(Util.getString(buf, start, index - start));
+                    bar.Add(getString(buf, start, index - start));
                     start = index + 1;
                     continue;
                 }
-                bar.Add(Util.getString(buf, start, buf.Length - start));
+                bar.Add(getString(buf, start, buf.Length - start));
                 break;
             }
             String[] result = new String[bar.Count];
@@ -145,12 +158,14 @@ namespace Tamir.SharpSsh.jsch
             }
             return result;
         }
+
         internal static bool glob(byte[] pattern, byte[] name)
         {
             return glob(pattern, 0, name, 0);
         }
+
         private static bool glob(byte[] pattern, int pattern_index,
-            byte[] name, int name_index)
+                                 byte[] name, int name_index)
         {
             //System.out.println("glob: "+new String(pattern)+", "+new String(name));
             int patternlen = pattern.Length;
@@ -167,7 +182,8 @@ namespace Tamir.SharpSsh.jsch
                         return false;
                     i++;
                     if (pattern[i] != name[j]) return false;
-                    i++; j++;
+                    i++;
+                    j++;
                     continue;
                 }
                 if (pattern[i] == '*')
@@ -195,20 +211,23 @@ namespace Tamir.SharpSsh.jsch
                 }
                 if (pattern[i] == '?')
                 {
-                    i++; j++;
+                    i++;
+                    j++;
                     continue;
                 }
                 if (pattern[i] != name[j]) return false;
-                i++; j++;
+                i++;
+                j++;
                 continue;
             }
             if (i == patternlen && j == namelen) return true;
             return false;
         }
 
-        private static String[] chars ={
-                                          "0","1","2","3","4","5","6","7","8","9", "a","b","c","d","e","f"
-                                      };
+        private static String[] chars = {
+                                            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"
+                                        };
+
         internal static String getFingerPrint(HASH hash, byte[] data)
         {
             try
@@ -216,7 +235,7 @@ namespace Tamir.SharpSsh.jsch
                 hash.init();
                 hash.update(data, 0, data.Length);
                 byte[] foo = hash.digest();
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 uint bar;
                 for (int i = 0; i < foo.Length; i++)
                 {
@@ -234,15 +253,15 @@ namespace Tamir.SharpSsh.jsch
             }
         }
 
-        internal static SharpSsh.java.net.Socket createSocket(String host, int port, int timeout)
+        internal static Socket createSocket(String host, int port, int timeout)
         {
-            SharpSsh.java.net.Socket socket = null;
+            Socket socket = null;
             String message = "";
             if (timeout == 0)
             {
                 try
                 {
-                    socket = new SharpSsh.java.net.Socket(host, port);
+                    socket = new Socket(host, port);
                     return socket;
                 }
                 catch (Exception e)
@@ -253,7 +272,7 @@ namespace Tamir.SharpSsh.jsch
             }
             String _host = host;
             int _port = port;
-            SharpSsh.java.net.Socket[] sockp = new SharpSsh.java.net.Socket[1];
+            Socket[] sockp = new Socket[1];
             Thread currentThread = Thread.CurrentThread;
             Exception[] ee = new Exception[1];
             message = "";
@@ -266,8 +285,9 @@ namespace Tamir.SharpSsh.jsch
                 tmp.Join(timeout);
                 message = "timeout: ";
             }
-            catch (ThreadInterruptedException) { }
-
+            catch (ThreadInterruptedException eee)
+            {
+            }
             if (sockp[0] != null && sockp[0].isConnected())
             {
                 socket = sockp[0];
@@ -288,12 +308,12 @@ namespace Tamir.SharpSsh.jsch
 
         private class createSocketRun
         {
-            SharpSsh.java.net.Socket[] sockp;
-            Exception[] ee;
-            string _host;
-            int _port;
+            private Socket[] sockp;
+            private Exception[] ee;
+            private string _host;
+            private int _port;
 
-            public createSocketRun(SharpSsh.java.net.Socket[] sockp, Exception[] ee, string _host, int _port)
+            public createSocketRun(Socket[] sockp, Exception[] ee, string _host, int _port)
             {
                 this.sockp = sockp;
                 this.ee = ee;
@@ -306,7 +326,7 @@ namespace Tamir.SharpSsh.jsch
                 sockp[0] = null;
                 try
                 {
-                    sockp[0] = new SharpSsh.java.net.Socket(_host, _port);
+                    sockp[0] = new Socket(_host, _port);
                 }
                 catch (Exception e)
                 {
@@ -315,7 +335,7 @@ namespace Tamir.SharpSsh.jsch
                     {
                         try
                         {
-                            sockp[0].close();
+                            sockp[0].Close();
                         }
                         catch (Exception) { }
                     }
@@ -328,24 +348,29 @@ namespace Tamir.SharpSsh.jsch
         {
             int i = foo.Length;
             if (i != bar.Length) return false;
-            for (int j = 0; j < i; j++) { if (foo[j] != bar[j]) return false; }
-            //try{while(true){i--; if(foo[i]!=bar[i])return false;}}catch(Exception e){}
+            for (int j = 0; j < i; j++)
+            {
+                if (foo[j] != bar[j]) return false;
+            }
+            //try{while(true){i--; if(foo[i]!=bar[i])return false;}}catch(System.Exception e){}
             return true;
         }
 
         public static string getString(byte[] arr, int offset, int len)
         {
-            return System.Text.Encoding.Default.GetString(arr, offset, len);
+            return Encoding.Default.GetString(arr, offset, len);
         }
+
         public static string getStringUTF8(byte[] arr, int offset, int len)
         {
-            return System.Text.Encoding.UTF8.GetString(arr, offset, len);
+            return Encoding.UTF8.GetString(arr, offset, len);
         }
 
         public static string getString(byte[] arr)
         {
             return getString(arr, 0, arr.Length);
         }
+
         public static string getStringUTF8(byte[] arr)
         {
             return getStringUTF8(arr, 0, arr.Length);
@@ -353,15 +378,16 @@ namespace Tamir.SharpSsh.jsch
 
         public static byte[] getBytes(String str)
         {
-            return System.Text.Encoding.Default.GetBytes(str);
+            return Encoding.Default.GetBytes(str);
         }
+
         public static byte[] getBytesUTF8(String str)
         {
-            return System.Text.Encoding.UTF8.GetBytes(str);
+            return Encoding.UTF8.GetBytes(str);
         }
 
         public static bool regionMatches(String orig, bool ignoreCase, int toffset,
-            String other, int ooffset, int len)
+                                         String other, int ooffset, int len)
         {
             char[] ta = new char[orig.Length];
             char[] pa = new char[other.Length];
@@ -436,6 +462,7 @@ namespace Tamir.SharpSsh.jsch
 
             return u;
         }
+
         public static bool ArrayContains(Object[] arr, Object o)
         {
             for (int i = 0; i < arr.Length; i++)
@@ -445,6 +472,7 @@ namespace Tamir.SharpSsh.jsch
             }
             return false;
         }
+
         public static bool ArrayContains(char[] arr, char c)
         {
             for (int i = 0; i < arr.Length; i++)
@@ -454,6 +482,7 @@ namespace Tamir.SharpSsh.jsch
             }
             return false;
         }
+
         public static bool ArrayContains(char[] arr, char c, int count)
         {
             for (int i = 0; i < count; i++)
@@ -469,6 +498,7 @@ namespace Tamir.SharpSsh.jsch
 		* @param a modulus
 		* @return modulus
 		*/
+
         public static byte[] stripLeadingZeros(byte[] a)
         {
             int lastZero = -1;
@@ -506,6 +536,7 @@ namespace Tamir.SharpSsh.jsch
 		The first integer (as a byte array) is r, and the second one is s. 
 
 		*/
+
         public static byte[] FixDsaSig(byte[] sig)
         {
             byte[] newSig = new byte[40];
@@ -521,14 +552,6 @@ namespace Tamir.SharpSsh.jsch
             return newSig;
         }
 
-        public static void print(string name, byte[] data)
-        {
-            Console.WriteLine();
-            Console.Write(name + ": ");
-            Console.WriteLine(hex(data));
-            Console.WriteLine();
-        }
-
         public static string hex(byte[] arr)
         {
             string hex = "0x";
@@ -542,17 +565,9 @@ namespace Tamir.SharpSsh.jsch
             return hex;
         }
 
-        public static void Dump(string fileName, byte[] bytes)
+        internal static String unquote(String _path)
         {
-            System.IO.FileStream s = new System.IO.FileStream(fileName, System.IO.FileMode.OpenOrCreate);
-            s.Write(bytes, 0, bytes.Length);
-            s.Flush();
-            s.Close();
-        }
-
-        internal static java.String unquote(java.String _path)
-        {
-            byte[] path = _path.getBytes();
+            byte[] path = _path.GetBytes();
             int pathlen = path.Length;
             int i = 0;
             while (i < pathlen)
@@ -561,7 +576,7 @@ namespace Tamir.SharpSsh.jsch
                 {
                     if (i + 1 == pathlen)
                         break;
-                    java.System.arraycopy(path, i + 1, path, i, path.Length - (i + 1));
+                    Array.Copy(path, i + 1, path, i, path.Length - (i + 1));
                     pathlen--;
                     continue;
                 }
@@ -569,11 +584,8 @@ namespace Tamir.SharpSsh.jsch
             }
             if (pathlen == path.Length) return _path;
             byte[] foo = new byte[pathlen];
-            java.System.arraycopy(path, 0, foo, 0, pathlen);
-            return new java.String(foo);
+            Array.Copy(path, 0, foo, 0, pathlen);
+            return new JavaString(foo);
         }
     }
 }
-
-
-

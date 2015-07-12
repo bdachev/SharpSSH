@@ -1,18 +1,33 @@
-using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using Net = System.Net;
-using Sock = System.Net.Sockets.Socket;
+using NetSocket = System.Net.Sockets.Socket;
 
 namespace Tamir.SharpSsh.java.net
 {
-    /// <summary>
-    /// Summary description for Socket.
-    /// </summary>
     public class Socket
     {
-        internal Sock sock;
+        // private System.Net.Sockets.Socket sock;
+        private NetSocket sock;
+
+        public Socket(string host, int port)
+        {
+            IPAddress ipAddr;
+            IPEndPoint ep;
+            if (IPAddress.TryParse(host, out ipAddr))
+            {
+                ep = new IPEndPoint(ipAddr, port);
+            }
+            else
+            {
+                ep = new IPEndPoint(Dns.GetHostEntry(host).AddressList[0], port);
+            }
+
+            // System.Net.Sockets.Socket
+            this.sock = new NetSocket(ep.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            this.sock.Connect(ep);
+        }
 
         protected void SetSocketOption(SocketOptionLevel level, SocketOptionName name, int val)
         {
@@ -25,34 +40,20 @@ namespace Tamir.SharpSsh.java.net
             }
         }
 
-        //		public Socket(AddressFamily af, SocketType st, ProtocolType pt)
-        //		{
-        //			this.sock = new Sock(af, st, pt);
-        //			this.sock.Connect();
-        //		}
-
-        public Socket(string host, int port)
-        {
-            IPEndPoint ep = new IPEndPoint(Dns.GetHostEntry(hostNameOrAddress: host).AddressList[0], port);
-            // GetHostByName(host).AddressList[0], port);
-            this.sock = new Sock(ep.AddressFamily,
-            SocketType.Stream, ProtocolType.Tcp);
-            this.sock.Connect(ep);
-        }
-
-        public Socket(Sock sock)
+        // System.Net.Sockets.Socket
+        public Socket(NetSocket sock)
         {
             this.sock = sock;
         }
 
         public Stream getInputStream()
         {
-            return new Net.Sockets.NetworkStream(sock);
+            return new NetworkStream(sock);
         }
 
         public Stream getOutputStream()
         {
-            return new Net.Sockets.NetworkStream(sock);
+            return new NetworkStream(sock);
         }
 
         public bool isConnected()
@@ -78,19 +79,19 @@ namespace Tamir.SharpSsh.java.net
             SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, t);
         }
 
-        public void close()
+        public void Close()
         {
             sock.Close();
         }
 
         public InetAddress getInetAddress()
         {
-            return new InetAddress(((IPEndPoint)sock.RemoteEndPoint).Address);
+            return new InetAddress(((IPEndPoint) sock.RemoteEndPoint).Address);
         }
 
         public int getPort()
         {
-            return ((IPEndPoint)sock.RemoteEndPoint).Port;
+            return ((IPEndPoint) sock.RemoteEndPoint).Port;
         }
     }
 }

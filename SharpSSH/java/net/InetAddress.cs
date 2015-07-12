@@ -1,26 +1,26 @@
-using System;
 using System.Net;
 
 namespace Tamir.SharpSsh.java.net
 {
-    /// <summary>
-    /// Summary description for InetAddress.
-    /// </summary>
     public class InetAddress
     {
         internal IPAddress addr;
-        public InetAddress(string addr)
-        {
-            this.addr = IPAddress.Parse(addr);
-        }
+
         public InetAddress(IPAddress addr)
         {
-            this.addr = addr;
+            this.addr = addr != null ? addr 
+                : IPAddress.None; // not null
+                // "127.0.0.1";
         }
 
         public bool isAnyLocalAddress()
         {
             return IPAddress.IsLoopback(addr);
+        }
+
+        public override int GetHashCode()
+        {
+            return addr.ToString().GetHashCode();
         }
 
         public bool equals(InetAddress addr)
@@ -46,17 +46,6 @@ namespace Tamir.SharpSsh.java.net
         public string getHostAddress()
         {
             return ToString();
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public static InetAddress getByName(string name)
-        {
-            return new InetAddress(Dns.GetHostEntry(hostNameOrAddress: name).AddressList[0]);
-                        // GetHostByName(name).AddressList[0]);
         }
     }
 }

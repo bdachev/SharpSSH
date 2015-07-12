@@ -33,7 +33,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
+    <UseApplicationTrust>true</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -76,12 +76,24 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ConsoleProgressBar.cs" />
+    <Compile Include="DelegatingKeyboardInteractiveUserInfo.cs" />
+    <Compile Include="DiffieHellman\DHKeyGeneration.cs" />
+    <Compile Include="DiffieHellman\DHParameters.cs" />
+    <Compile Include="DiffieHellman\DiffieHellman.cs" />
+    <Compile Include="DiffieHellman\DiffieHellmanManaged.cs" />
+    <Compile Include="DiffieHellman\mono\BigInteger.cs" />
+    <Compile Include="DiffieHellman\mono\ConfidenceFactor.cs" />
+    <Compile Include="DiffieHellman\mono\MiniParser.cs" />
+    <Compile Include="DiffieHellman\mono\NextPrimeFinder.cs" />
+    <Compile Include="DiffieHellman\mono\PrimalityTests.cs" />
+    <Compile Include="DiffieHellman\mono\PrimeGeneratorBase.cs" />
+    <Compile Include="DiffieHellman\mono\SecurityParser.cs" />
+    <Compile Include="DiffieHellman\mono\SequentialSearchPrimeGeneratorBase.cs" />
+    <Compile Include="DiffieHellman\TestApp.cs" />
+    <Compile Include="FileTransferEvent.cs" />
     <Compile Include="GenericSftpInputStream.cs" />
     <Compile Include="GenericSftpOutputStream.cs" />
     <Compile Include="ITransferProtocol.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\Exception.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="java\io\File.cs">
@@ -105,94 +117,42 @@
     <Compile Include="java\io\OutputStream.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="java\lang\Class.cs">
+    <Compile Include="java\io\OutputStreamWrapper.cs" />
+    <Compile Include="java\JavaException.cs" />
+    <Compile Include="java\lang\JavaRunnable.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="java\lang\Integer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\lang\Runnable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\lang\StringBuffer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\lang\Thread.cs">
+    <Compile Include="java\lang\JavaThread.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="java\net\InetAddress.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="java\net\ServerSocket.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="java\net\Socket.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="java\Platform.cs">
+    <Compile Include="java\JavaString.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="java\RuntimeException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\String.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\System.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\util\Arrays.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\util\Enumeration.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\util\Hashtable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\util\JavaString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="java\util\Vector.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\Buffer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\Channel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelDirectTCPIP.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelExec.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelForwardedTCPIP.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelSession.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelSftp.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelSftpStreamGet.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelSftpStreamPut.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelShell.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelSubsystem.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\ChannelX11.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\Cipher.cs">
+    <Compile Include="java\Platform.cs" />
+    <Compile Include="java\System.cs" />
+    <Compile Include="java\util\Arrays.cs" />
+    <Compile Include="java\util\Enumeration.cs" />
+    <Compile Include="java\util\Hashtable.cs" />
+    <Compile Include="java\util\JavaString.cs" />
+    <Compile Include="java\util\Vector.cs" />
+    <Compile Include="jsch\Channel\Channel.cs" />
+    <Compile Include="jsch\Channel\ChannelDirectTCPIP.cs" />
+    <Compile Include="jsch\Channel\ChannelExec.cs" />
+    <Compile Include="jsch\Channel\ChannelForwardedTCPIP.cs" />
+    <Compile Include="jsch\Channel\ChannelSession.cs" />
+    <Compile Include="jsch\Channel\ChannelSftp.cs" />
+    <Compile Include="jsch\Channel\ChannelSftpStreamGet.cs" />
+    <Compile Include="jsch\Channel\ChannelShell.cs" />
+    <Compile Include="jsch\Channel\ChannelSubsystem.cs" />
+    <Compile Include="jsch\Channel\ChannelX11.cs" />
+    <Compile Include="jsch\Channel\Session.cs" />
+    <Compile Include="jsch\OutputStreamPut.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\Compression.cs">
@@ -217,12 +177,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\HostKeyRepository.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\Identity.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\IdentityFile.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\IO.cs">
@@ -285,24 +239,6 @@
     <Compile Include="jsch\JSchPartialAuthException.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Request\KeyExchange.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\KeyPair.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\KeyPairDSA.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\KeyPairGenDSA.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\KeyPairGenRSA.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\KeyPairRSA.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="jsch\KnownHosts.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -315,7 +251,7 @@
     <Compile Include="jsch\PortWatcher.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Proxy.cs">
+    <Compile Include="jsch\IProxy.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\ProxyHTTP.cs">
@@ -324,37 +260,26 @@
     <Compile Include="jsch\Random.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\Request\Request.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestExec.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestPtyReq.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestSftp.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestShell.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestSignal.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestSubsystem.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestWindowChange.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Request\RequestX11.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="jsch\Request\Buffer.cs" />
+    <Compile Include="jsch\Request\Cipher.cs" />
+    <Compile Include="jsch\Request\Identity.cs" />
+    <Compile Include="jsch\Request\IdentityFile.cs" />
+    <Compile Include="jsch\Request\KeyExchange.cs" />
+    <Compile Include="jsch\Request\KeyPair.cs" />
+    <Compile Include="jsch\Request\KeyPairDSA.cs" />
+    <Compile Include="jsch\Request\KeyPairGenDSA.cs" />
+    <Compile Include="jsch\Request\KeyPairGenRSA.cs" />
+    <Compile Include="jsch\Request\KeyPairRSA.cs" />
+    <Compile Include="jsch\Request\Request.cs" />
+    <Compile Include="jsch\Request\RequestExec.cs" />
+    <Compile Include="jsch\Request\RequestPtyReq.cs" />
+    <Compile Include="jsch\Request\RequestSftp.cs" />
+    <Compile Include="jsch\Request\RequestShell.cs" />
+    <Compile Include="jsch\Request\RequestSignal.cs" />
+    <Compile Include="jsch\Request\RequestSubsystem.cs" />
+    <Compile Include="jsch\Request\RequestWindowChange.cs" />
+    <Compile Include="jsch\Request\RequestX11.cs" />
     <Compile Include="jsch\ServerSocketFactory.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\Channel\Session.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\SftpATTRS.cs">
@@ -378,24 +303,12 @@
     <Compile Include="jsch\UIKeyboardInteractive.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="jsch\User\UserAuth.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\User\UserAuthKeyboardInteractive.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\User\UserAuthNone.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\User\UserAuthPassword.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\User\UserAuthPublicKey.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="jsch\User\UserInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="jsch\User\UserAuth.cs" />
+    <Compile Include="jsch\User\UserAuthKeyboardInteractive.cs" />
+    <Compile Include="jsch\User\UserAuthNone.cs" />
+    <Compile Include="jsch\User\UserAuthPassword.cs" />
+    <Compile Include="jsch\User\UserAuthPublicKey.cs" />
+    <Compile Include="jsch\User\UserInfo.cs" />
     <Compile Include="jsch\Util.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -409,13 +322,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SshConnectionInfo.cs" />
-    <Compile Include="SshExe.cs">
+    <Compile Include="SshExec.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SshFingerprintOnlyHostsList.cs" />
     <Compile Include="SshHelper.cs" />
-    <Compile Include="SshShell.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="SshShell.cs" />
     <Compile Include="SshStream.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -428,12 +340,6 @@
     <Compile Include="Streams\CombinedStream.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Streams\InputStream.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Streams\OutputStream.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Streams\PipedInputStream.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -443,8 +349,11 @@
     <Compile Include="Streams\ProtectedConsoleStream.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="StringExtensions.cs" />
+    <Compile Include="Wrappers\SFTPUtil.cs" />
     <Content Include="App.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent />

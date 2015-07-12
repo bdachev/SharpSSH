@@ -1,8 +1,8 @@
 using System;
-using Tamir.SharpSsh.jsch;
 using System.IO;
 using System.Text;
-using System.Collections;
+using Tamir.SharpSsh.jsch;
+using Tamir.Streams;
 
 /* 
  * Scp.cs
@@ -54,6 +54,12 @@ namespace Tamir.SharpSsh
         public Scp(string host, string user)
             : base(host, user)
         {
+        }
+
+        public static Scp Clone(SshBase baseConnection)
+        {
+            var clone = new Scp(baseConnection.Host, baseConnection.Username, baseConnection.Password);
+            return clone;
         }
 
         protected override string ChannelType
@@ -120,7 +126,6 @@ namespace Tamir.SharpSsh
         }
 
 
-
         /// <summary>
         /// Copies a file from local machine to a remote SSH machine.
         /// </summary>
@@ -154,7 +159,7 @@ namespace Tamir.SharpSsh
                     SCP_SendFile(server, localPath, remotePath);
                     channel.disconnect();
                 }
-                //else, if we are sending a local directory
+                    //else, if we are sending a local directory
                 else if (Directory.Exists(localPath))
                 {
                     if (!_recursive)
@@ -175,8 +180,13 @@ namespace Tamir.SharpSsh
                 if (Verbos)
                     Console.WriteLine("Error: " + e.Message);
                 //SendEndMessage(remoteFile, localFile, filesize,filesize, "Transfer ended with an error.");
-                try { channel.disconnect(); }
-                catch { }
+                try
+                {
+                    channel.disconnect();
+                }
+                catch
+                {
+                }
                 throw e;
             }
         }
@@ -239,7 +249,7 @@ namespace Tamir.SharpSsh
             Channel channel = null;
             Stream server = null;
             m_cancelled = false;
-            int filesize = 0;
+            Int64 filesize = 0;
             String filename = null;
             string cmd = null;
 
@@ -265,7 +275,7 @@ namespace Tamir.SharpSsh
                     if (m_cancelled)
                         break;
 
-                    cmd = "" + (char)c;
+                    cmd = "" + (char) c;
                     if (c == 'E')
                     {
                         c = SCP_CheckAck(server);
@@ -273,14 +283,14 @@ namespace Tamir.SharpSsh
                         if (Verbos) Console.WriteLine("E");
                         //send '\0'
                         SCP_SendAck(server);
-                        c = (char)SCP_CheckAck(server);
+                        c = (char) SCP_CheckAck(server);
                         continue;
                     }
 
                     // read '0644 ' or '0755 '
                     server.Read(buf, 0, 5);
                     for (int i = 0; i < 5; i++)
-                        cmd += (char)buf[i];
+                        cmd += (char) buf[i];
 
                     //reading file size
                     filesize = 0;
@@ -288,14 +298,14 @@ namespace Tamir.SharpSsh
                     {
                         server.Read(buf, 0, 1);
                         if (buf[0] == ' ') break;
-                        filesize = filesize * 10 + (buf[0] - '0');
+                        filesize = filesize*10 + (buf[0] - '0');
                     }
 
                     //reading file name					
-                    for (int i = 0; ; i++)
+                    for (int i = 0;; i++)
                     {
                         server.Read(buf, i, 1);
-                        if (buf[i] == (byte)0x0a)
+                        if (buf[i] == (byte) 0x0a)
                         {
                             filename = Util.getString(buf, 0, i);
                             break;
@@ -310,8 +320,8 @@ namespace Tamir.SharpSsh
                     {
                         if (Verbos) Console.WriteLine("Sending file modes: " + cmd);
                         SCP_ReceiveFile(server, remoteFile,
-                            dir == null ? localPath : dir + "/" + filename,
-                            filesize);
+                                        dir == null ? localPath : dir + "/" + filename,
+                                        filesize);
 
                         if (m_cancelled)
                             break;
@@ -319,7 +329,7 @@ namespace Tamir.SharpSsh
                         // send '\0'
                         SCP_SendAck(server);
                     }
-                    //Enter directory
+                        //Enter directory
                     else if (c == 'D')
                     {
                         if (dir == null)
@@ -345,7 +355,9 @@ namespace Tamir.SharpSsh
                 {
                     channel.disconnect();
                 }
-                catch { }
+                catch
+                {
+                }
                 throw e;
             }
         }
@@ -374,12 +386,12 @@ namespace Tamir.SharpSsh
             if (recursive) scpCommand += "-r ";
             scpCommand += "\"" + rfile + "\"";
 
-            channel = (ChannelExec)m_session.openChannel(ChannelType);
-            ((ChannelExec)channel).setCommand(scpCommand);
+            channel = (ChannelExec) m_session.openChannel(ChannelType);
+            ((ChannelExec) channel).setCommand(scpCommand);
 
             server =
-                new Tamir.Streams.CombinedStream
-                (channel.getInputStream(), channel.getOutputStream());
+                new CombinedStream
+                    (channel.getInputStream(), channel.getOutputStream());
             channel.connect();
 
             SCP_CheckAck(server);
@@ -398,12 +410,12 @@ namespace Tamir.SharpSsh
             if (recursive) scpCommand += "-r ";
             scpCommand += "\"" + rfile + "\"";
 
-            channel = (ChannelExec)m_session.openChannel(ChannelType);
-            ((ChannelExec)channel).setCommand(scpCommand);
+            channel = (ChannelExec) m_session.openChannel(ChannelType);
+            ((ChannelExec) channel).setCommand(scpCommand);
 
             server =
-                new Tamir.Streams.CombinedStream
-                (channel.getInputStream(), channel.getOutputStream());
+                new CombinedStream
+                    (channel.getInputStream(), channel.getOutputStream());
             channel.connect();
 
             //SCP_CheckAck(server);
@@ -417,10 +429,10 @@ namespace Tamir.SharpSsh
         /// <param name="dst">The remote destination path</param>
         protected void SCP_SendFile(Stream server, string src, string dst)
         {
-            int filesize = 0;
-            int copied = 0;
+            Int64 filesize = 0;
+            Int64 copied = 0;
 
-            filesize = (int)(new FileInfo(src)).Length;
+            filesize = (new FileInfo(src)).Length;
 
             byte[] tmp = new byte[1];
 
@@ -430,7 +442,8 @@ namespace Tamir.SharpSsh
             if (Verbos) Console.WriteLine("Sending file modes: " + command);
             SendStartMessage(src, dst, filesize, "Starting transfer.");
             byte[] buff = Util.getBytes(command);
-            server.Write(buff, 0, buff.Length); server.Flush();
+            server.Write(buff, 0, buff.Length);
+            server.Flush();
 
             if (SCP_CheckAck(server) != 0)
             {
@@ -440,13 +453,14 @@ namespace Tamir.SharpSsh
             // send a content of lfile
             SendProgressMessage(src, dst, copied, filesize, "Transferring...");
             FileStream fis = File.OpenRead(src);
-            byte[] buf = new byte[1024 * 10 * 2];
+            byte[] buf = new byte[1024*10*2];
 
             while (!m_cancelled)
             {
                 int len = fis.Read(buf, 0, buf.Length);
                 if (len <= 0) break;
-                server.Write(buf, 0, len); server.Flush();
+                server.Write(buf, 0, len);
+                server.Flush();
                 copied += len;
                 SendProgressMessage(src, dst, copied, filesize, "Transferring...");
             }
@@ -456,7 +470,9 @@ namespace Tamir.SharpSsh
                 return;
 
             // send '\0'
-            buf[0] = 0; server.Write(buf, 0, 1); server.Flush();
+            buf[0] = 0;
+            server.Write(buf, 0, 1);
+            server.Flush();
 
             SendProgressMessage(src, dst, copied, filesize, "Verifying transfer...");
             if (SCP_CheckAck(server) != 0)
@@ -464,7 +480,7 @@ namespace Tamir.SharpSsh
                 SendEndMessage(src, dst, copied, filesize, "Transfer ended with an error.");
                 throw new SshTransferException("Unknow error during file transfer.");
             }
-            SendEndMessage(src, dst, copied, filesize, "Transfer completed successfuly (" + copied + " bytes).");
+            SendEndMessage(src, dst, copied, filesize, "Transfer completed successfully (" + copied + " bytes).");
         }
 
         /// <summary>
@@ -473,20 +489,20 @@ namespace Tamir.SharpSsh
         /// <param name="server">A connected server I/O stream</param>
         /// <param name="rfile">The remote file to copy</param>
         /// <param name="lfile">The local destination path</param>
-        protected void SCP_ReceiveFile(Stream server, string rfile, string lfile, int size)
+        protected void SCP_ReceiveFile(Stream server, string rfile, string lfile, Int64 size)
         {
-            int copied = 0;
+            Int64 copied = 0;
             SendStartMessage(rfile, lfile, size, "Connected, starting transfer.");
             // read a content of lfile
             FileStream fos = File.OpenWrite(lfile);
             int foo;
-            int filesize = size;
+            Int64 filesize = size;
             byte[] buf = new byte[1024];
             while (!m_cancelled)
             {
                 if (buf.Length < filesize) foo = buf.Length;
-                else foo = filesize;
-                int len = server.Read(buf, 0, foo);
+                else foo = (int) filesize;
+                Int64 len = server.Read(buf, 0, foo);
                 copied += len;
                 fos.Write(buf, 0, foo);
                 SendProgressMessage(rfile, lfile, copied, size, "Transferring...");
@@ -497,7 +513,7 @@ namespace Tamir.SharpSsh
             if (m_cancelled)
                 return;
             SCP_CheckAck(server);
-            SendEndMessage(rfile, lfile, copied, size, "Transfer completed successfuly (" + filesize + " bytes).");
+            SendEndMessage(rfile, lfile, copied, size, "Transfer completed successfully (" + filesize + " bytes).");
         }
 
         /// <summary>
@@ -517,14 +533,17 @@ namespace Tamir.SharpSsh
                 if (Verbos) Console.WriteLine("Enter directory: " + command);
 
                 byte[] buff = Util.getBytes(command);
-                server.Write(buff, 0, buff.Length); server.Flush();
+                server.Write(buff, 0, buff.Length);
+                server.Flush();
 
                 if (SCP_CheckAck(server) != 0)
                 {
                     throw new SshTransferException("Error openning communication channel.");
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         /// <summary>
@@ -543,14 +562,17 @@ namespace Tamir.SharpSsh
                 if (Verbos) Console.WriteLine(command);
 
                 byte[] buff = Util.getBytes(command);
-                server.Write(buff, 0, buff.Length); server.Flush();
+                server.Write(buff, 0, buff.Length);
+                server.Flush();
 
                 if (SCP_CheckAck(server) != 0)
                 {
                     throw new SshTransferException("Error openning communication channel.");
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         /// <summary>
@@ -574,17 +596,18 @@ namespace Tamir.SharpSsh
                 do
                 {
                     c = ins.ReadByte();
-                    sb.Append((char)c);
-                }
-                while (c != '\n');
+                    sb.Append((char) c);
+                } while (c != '\n');
                 if (b == 1)
-                { // error
-                  //Console.WriteLine(sb.ToString());
+                {
+                    // error
+                    //Console.WriteLine(sb.ToString());
                     throw new SshTransferException(sb.ToString());
                 }
                 if (b == 2)
-                { // fatal error
-                  //Console.WriteLine(sb.ToString());
+                {
+                    // fatal error
+                    //Console.WriteLine(sb.ToString());
                     throw new SshTransferException(sb.ToString());
                 }
             }
@@ -599,11 +622,6 @@ namespace Tamir.SharpSsh
         {
             server.WriteByte(0);
             server.Flush();
-        }
-
-        public override void Delete(string path)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion SCP private functions

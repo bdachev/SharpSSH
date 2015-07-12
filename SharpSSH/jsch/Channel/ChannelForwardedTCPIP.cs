@@ -1,9 +1,8 @@
 using System;
-using System.IO;
-using Tamir.SharpSsh.java.util;
-using Tamir.SharpSsh.java.net;
+using System.Collections;
+using System.Threading;
 using Tamir.SharpSsh.java.lang;
-using Str = Tamir.SharpSsh.java.String;
+using Tamir.SharpSsh.java.net;
 
 namespace Tamir.SharpSsh.jsch
 {
@@ -38,12 +37,11 @@ namespace Tamir.SharpSsh.jsch
 
     public class ChannelForwardedTCPIP : Channel
     {
-
-        internal static java.util.Vector pool = new java.util.Vector();
+        internal static ArrayList pool = new ArrayList();
 
         //  static private final int LOCAL_WINDOW_SIZE_MAX=0x20000;
-        static private int LOCAL_WINDOW_SIZE_MAX = 0x100000;
-        static private int LOCAL_MAXIMUM_PACKET_SIZE = 0x4000;
+        private static int LOCAL_WINDOW_SIZE_MAX = 0x100000;
+        private static int LOCAL_MAXIMUM_PACKET_SIZE = 0x4000;
 
         internal SocketFactory factory = null;
         internal String target;
@@ -64,20 +62,20 @@ namespace Tamir.SharpSsh.jsch
                 io = new IO();
                 if (lport == -1)
                 {
-                    Class c = Class.forName(target);
-                    ForwardedTCPIPDaemon daemon = (ForwardedTCPIPDaemon)c.newInstance();
+                    var c = Type.GetType(target);
+                    ForwardedTCPIPDaemon daemon = (ForwardedTCPIPDaemon) Activator.CreateInstance(c);
                     daemon.setChannel(this);
                     Object[] foo = getPort(session, rport);
-                    daemon.setArg((Object[])foo[3]);
-                    new Thread(daemon).start();
+                    daemon.setArg((Object[]) foo[3]);
+                    new JavaThread(daemon).Start();
                     connected = true;
                     return;
                 }
                 else
                 {
                     Socket socket = (factory == null) ?
-                        new Socket(target, lport) :
-                        factory.createSocket(target, lport);
+                                                          new Socket(target, lport) :
+                                                                                        factory.createSocket(target, lport);
                     socket.setTcpNoDelay(true);
                     io.setInputStream(socket.getInputStream());
                     io.setOutputStream(socket.getOutputStream());
@@ -93,7 +91,7 @@ namespace Tamir.SharpSsh.jsch
 
         public override void run()
         {
-            thread = Thread.currentThread();
+            thread = new JavaThread(Thread.CurrentThread);
             Buffer buf = new Buffer(rmpsize);
             Packet packet = new Packet(buf);
             int i = 0;
@@ -102,9 +100,9 @@ namespace Tamir.SharpSsh.jsch
                 while (thread != null && io != null && io.ins != null)
                 {
                     i = io.ins.Read(buf.buffer,
-                        14,
-                        buf.buffer.Length - 14
-                        - 32 - 20 // padding and mac
+                                    14,
+                                    buf.buffer.Length - 14
+                                    - 32 - 20 // padding and mac
                         );
                     if (i <= 0)
                     {
@@ -113,14 +111,14 @@ namespace Tamir.SharpSsh.jsch
                     }
                     packet.reset();
                     if (_close) break;
-                    buf.putByte((byte)Session.SSH_MSG_CHANNEL_DATA);
+                    buf.putByte((byte) Session.SSH_MSG_CHANNEL_DATA);
                     buf.putInt(recipient);
                     buf.putInt(i);
                     buf.skip(i);
                     session.write(packet, this, i);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //System.out.println(e);
             }
@@ -129,6 +127,7 @@ namespace Tamir.SharpSsh.jsch
             //eof();
             disconnect();
         }
+
         internal override void getData(Buffer buf)
         {
             setRecipient(buf.getInt());
@@ -148,18 +147,24 @@ namespace Tamir.SharpSsh.jsch
 
             lock (pool)
             {
-                for (int i = 0; i < pool.size(); i++)
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Object[] foo = (Object[])(pool.elementAt(i));
+                    Object[] foo = (Object[]) (pool[i]);
                     if (foo[0] != session) continue;
-                    if (((Integer)foo[1]).intValue() != port) continue;
+                    if (Int32.Parse(foo[1] + "") != port) continue;
                     this.rport = port;
-                    this.target = (String)foo[2];
-                    if (foo[3] == null || (foo[3] is Object[])) { this.lport = -1; }
-                    else { this.lport = ((Integer)foo[3]).intValue(); }
+                    this.target = (String) foo[2];
+                    if (foo[3] == null || (foo[3] is Object[]))
+                    {
+                        this.lport = -1;
+                    }
+                    else
+                    {
+                        this.lport = Int32.Parse(foo[3] + "");
+                    }
                     if (foo.Length >= 5)
                     {
-                        this.factory = ((SocketFactory)foo[4]);
+                        this.factory = ((SocketFactory) foo[4]);
                     }
                     break;
                 }
@@ -174,11 +179,11 @@ namespace Tamir.SharpSsh.jsch
         {
             lock (pool)
             {
-                for (int i = 0; i < pool.size(); i++)
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Object[] bar = (Object[])(pool.elementAt(i));
+                    Object[] bar = (Object[]) (pool[i]);
                     if (bar[0] != session) continue;
-                    if (((Integer)bar[1]).intValue() != rport) continue;
+                    if (Int32.Parse(bar[1] + "") != rport) continue;
                     return bar;
                 }
                 return null;
@@ -187,21 +192,27 @@ namespace Tamir.SharpSsh.jsch
 
         internal static String[] getPortForwarding(Session session)
         {
-            java.util.Vector foo = new java.util.Vector();
+            ArrayList foo = new ArrayList();
             lock (pool)
             {
-                for (int i = 0; i < pool.size(); i++)
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Object[] bar = (Object[])(pool.elementAt(i));
+                    Object[] bar = (Object[]) (pool[i]);
                     if (bar[0] != session) continue;
-                    if (bar[3] == null) { foo.addElement(bar[1] + ":" + bar[2] + ":"); }
-                    else { foo.addElement(bar[1] + ":" + bar[2] + ":" + bar[3]); }
+                    if (bar[3] == null)
+                    {
+                        foo.Add(bar[1] + ":" + bar[2] + ":");
+                    }
+                    else
+                    {
+                        foo.Add(bar[1] + ":" + bar[2] + ":" + bar[3]);
+                    }
                 }
             }
-            String[] bar2 = new String[foo.size()];
-            for (int i = 0; i < foo.size(); i++)
+            String[] bar2 = new String[foo.Count];
+            for (int i = 0; i < foo.Count; i++)
             {
-                bar2[i] = (String)(foo.elementAt(i));
+                bar2[i] = (String) (foo[i]);
             }
             return bar2;
         }
@@ -215,12 +226,15 @@ namespace Tamir.SharpSsh.jsch
                     throw new JSchException("PortForwardingR: remote port " + port + " is already registered.");
                 }
                 Object[] foo = new Object[5];
-                foo[0] = session; foo[1] = new Integer(port);
-                foo[2] = target; foo[3] = new Integer(lport);
+                foo[0] = session;
+                foo[1] = int.Parse(port + "");
+                foo[2] = target;
+                foo[3] = int.Parse(port + "");
                 foo[4] = factory;
-                pool.addElement(foo);
+                pool.Add(foo);
             }
         }
+
         internal static void addPort(Session session, int port, String daemon, Object[] arg)
         {
             lock (pool)
@@ -230,30 +244,34 @@ namespace Tamir.SharpSsh.jsch
                     throw new JSchException("PortForwardingR: remote port " + port + " is already registered.");
                 }
                 Object[] foo = new Object[4];
-                foo[0] = session; foo[1] = new Integer(port);
-                foo[2] = daemon; foo[3] = arg;
-                pool.addElement(foo);
+                foo[0] = session;
+                foo[1] = int.Parse(port + "");
+                foo[2] = daemon;
+                foo[3] = arg;
+                pool.Add(foo);
             }
         }
+
         internal static void delPort(ChannelForwardedTCPIP c)
         {
             delPort(c.session, c.rport);
         }
+
         internal static void delPort(Session session, int rport)
         {
             lock (pool)
             {
                 Object[] foo = null;
-                for (int i = 0; i < pool.size(); i++)
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Object[] bar = (Object[])(pool.elementAt(i));
+                    Object[] bar = (Object[]) (pool[i]);
                     if (bar[0] != session) continue;
-                    if (((Integer)bar[1]).intValue() != rport) continue;
+                    if (int.Parse(bar[1] + "") != rport) continue;
                     foo = bar;
                     break;
                 }
                 if (foo == null) return;
-                pool.removeElement(foo);
+                pool.Remove(foo);
             }
 
             Buffer buf = new Buffer(100); // ??
@@ -267,31 +285,32 @@ namespace Tamir.SharpSsh.jsch
                 // string  address_to_bind (e.g. "127.0.0.1")
                 // uint32  port number to bind
                 packet.reset();
-                buf.putByte((byte)80/*SSH_MSG_GLOBAL_REQUEST*/);
-                buf.putString(new Str("cancel-tcpip-forward").getBytes());
-                buf.putByte((byte)0);
-                buf.putString(new Str("0.0.0.0").getBytes());
+                buf.putByte((byte) 80 /*SSH_MSG_GLOBAL_REQUEST*/);
+                buf.putString("cancel-tcpip-forward".GetBytes());
+                buf.putByte((byte) 0);
+                buf.putString("0.0.0.0".GetBytes());
                 buf.putInt(rport);
                 session.write(packet);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //    throw new JSchException(e.toString());
             }
         }
+
         internal static void delPort(Session session)
         {
             int[] rport = null;
             int count = 0;
             lock (pool)
             {
-                rport = new int[pool.size()];
-                for (int i = 0; i < pool.size(); i++)
+                rport = new int[pool.Count];
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Object[] bar = (Object[])(pool.elementAt(i));
+                    Object[] bar = (Object[]) (pool[i]);
                     if (bar[0] == session)
                     {
-                        rport[count++] = ((Integer)bar[1]).intValue();
+                        rport[count++] = int.Parse(bar[1] + "");
                     }
                 }
             }
@@ -300,11 +319,15 @@ namespace Tamir.SharpSsh.jsch
                 delPort(session, rport[i]);
             }
         }
-        public int getRemotePort() { return rport; }
-        void setSocketFactory(SocketFactory factory)
+
+        public int getRemotePort()
+        {
+            return rport;
+        }
+
+        private void setSocketFactory(SocketFactory factory)
         {
             this.factory = factory;
         }
     }
-
 }

@@ -1,9 +1,9 @@
-using System;
+using System.Threading;
 
 namespace Tamir.SharpSsh.jsch
 {
-	/* -*-mode:java; c-basic-offset:2; -*- */
-	/*
+    /* -*-mode:java; c-basic-offset:2; -*- */
+    /*
 	Copyright (c) 2002,2003,2004 ymnk, JCraft,Inc. All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without
@@ -31,43 +31,49 @@ namespace Tamir.SharpSsh.jsch
 	EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	*/
 
-	public class RequestSftp : Request
-	{
-		public void request(Session session, Channel channel)
-		{
-			Buffer buf=new Buffer();
-			Packet packet=new Packet(buf);
+    public class RequestSftp : Request
+    {
+        public void request(Session session, Channel channel)
+        {
+            Buffer buf = new Buffer();
+            Packet packet = new Packet(buf);
 
-			bool reply=waitForReply();
-			if(reply)
-			{
-				channel.reply=-1;
-			}
+            bool reply = waitForReply();
+            if (reply)
+            {
+                channel.reply = -1;
+            }
 
-			packet.reset();
-			buf.putByte((byte)Session.SSH_MSG_CHANNEL_REQUEST);
-			buf.putInt(channel.getRecipient());
-			buf.putString(Util.getBytes("subsystem"));
-			buf.putByte((byte)(waitForReply() ? 1 : 0));
-			buf.putString(Util.getBytes("sftp"));
-			session.write(packet);
+            packet.reset();
+            buf.putByte((byte) Session.SSH_MSG_CHANNEL_REQUEST);
+            buf.putInt(channel.getRecipient());
+            buf.putString(Util.getBytes("subsystem"));
+            buf.putByte((byte) (waitForReply() ? 1 : 0));
+            buf.putString(Util.getBytes("sftp"));
+            session.write(packet);
 
-			if(reply)
-			{
-				while(channel.reply==-1)
-				{
-					try{System.Threading.Thread.Sleep(10);}
-					catch//(Exception ee)
-					{
-					}
-				}
-				if(channel.reply==0)
-				{
-					throw new JSchException("failed to send sftp request");
-				}
-			}
-		}
-		public bool waitForReply(){ return true; }
-	}
+            if (reply)
+            {
+                while (channel.reply == -1)
+                {
+                    try
+                    {
+                        Thread.Sleep(10);
+                    }
+                    catch //(System.Exception ee)
+                    {
+                    }
+                }
+                if (channel.reply == 0)
+                {
+                    throw new JSchException("failed to send sftp request");
+                }
+            }
+        }
 
+        public bool waitForReply()
+        {
+            return true;
+        }
+    }
 }

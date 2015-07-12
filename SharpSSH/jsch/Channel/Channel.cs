@@ -1,47 +1,49 @@
+/*
+Copyright (c) 2002,2003,2004 ymnk, JCraft,Inc. All rights reserved.
+
+Redistribution and use In source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions In binary form must reproduce the above copyright 
+     notice, this list of conditions and the following disclaimer In 
+     the documentation and/or other materials provided with the distribution.
+
+  3. The names of the authors may not be used to endorse or promote products
+     derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JCRAFT,
+INC. OR ANY CONTRIBUTORS TO THIS SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 using System;
-using System.Net;
+using System.Collections;
 using System.IO;
-using Tamir.Streams;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Tamir.SharpSsh.java.io;
 using Tamir.SharpSsh.java.lang;
-using Str = Tamir.SharpSsh.java.String;
+using Tamir.Streams;
 
 namespace Tamir.SharpSsh.jsch
 {
     /* -*-mode:java; c-basic-offset:2; -*- */
-    /*
-	Copyright (c) 2002,2003,2004 ymnk, JCraft,Inc. All rights reserved.
 
-	Redistribution and use In source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-
-	  1. Redistributions of source code must retain the above copyright notice,
-		 this list of conditions and the following disclaimer.
-
-	  2. Redistributions In binary form must reproduce the above copyright 
-		 notice, this list of conditions and the following disclaimer In 
-		 the documentation and/or other materials provided with the distribution.
-
-	  3. The names of the authors may not be used to endorse or promote products
-		 derived from this software without specific prior written permission.
-
-	THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
-	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-	FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JCRAFT,
-	INC. OR ANY CONTRIBUTORS TO THIS SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT,
-	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-	OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-	NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-	EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-	*/
-
-
-    public abstract class Channel : Tamir.SharpSsh.java.lang.Runnable
+    public abstract class Channel : JavaRunnable
     {
         internal static int index = 0;
-        private static java.util.Vector pool = new java.util.Vector();
+        private static ArrayList pool = new ArrayList();
+
         internal static Channel getChannel(String type)
         {
             if (type.Equals("session"))
@@ -78,38 +80,40 @@ namespace Tamir.SharpSsh.jsch
             }
             return null;
         }
+
         internal static Channel getChannel(int id, Session session)
         {
             lock (pool)
             {
-                for (int i = 0; i < pool.size(); i++)
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Channel c = (Channel)(pool.elementAt(i));
+                    Channel c = (Channel) (pool[i]);
                     if (c.id == id && c.session == session) return c;
                 }
             }
             return null;
         }
+
         internal static void del(Channel c)
         {
             lock (pool)
             {
-                pool.removeElement(c);
+                pool.Remove(c);
             }
         }
 
         internal int id;
         internal int recipient = -1;
-        internal byte[] type = new Str("foo").getBytes();
+        internal byte[] type = "foo".GetBytes();
         internal int lwsize_max = 0x100000;
-        internal int lwsize = 0x100000;  // local initial window size
-        internal int lmpsize = 0x4000;     // local maximum packet size
+        internal int lwsize = 0x100000; // local initial window size
+        internal int lmpsize = 0x4000; // local maximum packet size
 
-        internal int rwsize = 0;         // remote initial window size
-        internal int rmpsize = 0;        // remote maximum packet size
+        internal int rwsize = 0; // remote initial window size
+        internal int rmpsize = 0; // remote maximum packet size
 
         internal IO io = null;
-        internal Thread thread = null;
+        internal JavaThread thread = null;
 
         internal bool eof_local = false;
         internal bool _eof_remote = false;
@@ -128,13 +132,15 @@ namespace Tamir.SharpSsh.jsch
             lock (pool)
             {
                 id = index++;
-                pool.addElement(this);
+                pool.Add(this);
             }
         }
+
         internal virtual void setRecipient(int foo)
         {
             this.recipient = foo;
         }
+
         internal virtual int getRecipient()
         {
             return recipient;
@@ -154,6 +160,7 @@ namespace Tamir.SharpSsh.jsch
             {
                 Buffer buf = new Buffer(100);
                 Packet packet = new Packet(buf);
+
                 // send
                 // byte   SSH_MSG_CHANNEL_OPEN(90)
                 // string channel type         //
@@ -161,7 +168,7 @@ namespace Tamir.SharpSsh.jsch
                 // uint32 initial window size  // 0x100000(65536)
                 // uint32 maxmum packet size   // 0x4000(16384)
                 packet.reset();
-                buf.putByte((byte)90);
+                buf.putByte((byte) 90);
                 buf.putString(this.type);
                 buf.putInt(this.id);
                 buf.putInt(this.lwsize);
@@ -170,11 +177,16 @@ namespace Tamir.SharpSsh.jsch
 
                 int retry = 1000;
                 while (this.getRecipient() == -1 &&
-                    session.isConnected() &&
-                    retry > 0)
+                       session.isConnected() &&
+                       retry > 0)
                 {
-                    try { Thread.sleep(50); }
-                    catch (Exception) { }
+                    try
+                    {
+                        Thread.Sleep(50);
+                    }
+                    catch (Exception ee)
+                    {
+                    }
                     retry--;
                 }
                 if (!session.isConnected())
@@ -191,7 +203,7 @@ namespace Tamir.SharpSsh.jsch
             catch (Exception e)
             {
                 connected = false;
-                if (e is JSchException) throw (JSchException)e;
+                if (e is JSchException) throw (JSchException) e;
             }
         }
 
@@ -199,9 +211,14 @@ namespace Tamir.SharpSsh.jsch
         {
         }
 
-        public virtual void start() { }
+        public virtual void start()
+        {
+        }
 
-        public bool isEOF() { return _eof_remote; }
+        public bool isEOF()
+        {
+            return _eof_remote;
+        }
 
         internal virtual void getData(Buffer buf)
         {
@@ -214,74 +231,117 @@ namespace Tamir.SharpSsh.jsch
         {
             io.setInputStream(In, false);
         }
+
         public virtual void setInputStream(Stream In, bool dontclose)
         {
             io.setInputStream(In, dontclose);
         }
+
         public virtual void setOutputStream(Stream Out)
         {
             io.setOutputStream(Out, false);
         }
+
         public virtual void setOutputStream(Stream Out, bool dontclose)
         {
             io.setOutputStream(Out, dontclose);
         }
+
         public virtual void setExtOutputStream(Stream Out)
         {
             io.setExtOutputStream(Out, false);
         }
+
         public virtual void setExtOutputStream(Stream Out, bool dontclose)
         {
             io.setExtOutputStream(Out, dontclose);
         }
-        public virtual java.io.InputStream getInputStream()
+
+        public virtual InputStream getInputStream()
         {
             PipedInputStream In =
                 new MyPipedInputStream(
-                32 * 1024  // this value should be customizable.
-                );
+                    32*1024 // this value should be customizable.
+                    );
             io.setOutputStream(new PassiveOutputStream(In), false);
             return In;
         }
-        public virtual java.io.InputStream getExtInputStream()
+
+        public virtual InputStream getExtInputStream()
         {
             PipedInputStream In =
                 new MyPipedInputStream(
-                32 * 1024  // this value should be customizable.
-                );
+                    32*1024 // this value should be customizable.
+                    );
             io.setExtOutputStream(new PassiveOutputStream(In), false);
             return In;
         }
+
         public virtual Stream getOutputStream()
         {
             PipedOutputStream Out = new PipedOutputStream();
             io.setInputStream(new PassiveInputStream(Out
-                , 32 * 1024
-                ), false);
+                                                     , 32*1024
+                                  ), false);
             //  io.setInputStream(new PassiveInputStream(Out), false);
             return Out;
         }
+
         internal class MyPipedInputStream : PipedInputStream
         {
-            internal MyPipedInputStream() : base() {; }
-            internal MyPipedInputStream(int size) : base()
+            internal MyPipedInputStream() : base()
+            {
+                ;
+            }
+
+            internal MyPipedInputStream(int size)
+                : base()
             {
                 buffer = new byte[size];
             }
-            internal MyPipedInputStream(PipedOutputStream Out) : base(Out) { }
-            internal MyPipedInputStream(PipedOutputStream Out, int size) : base(Out)
+
+            internal MyPipedInputStream(PipedOutputStream Out) : base(Out)
+            {
+            }
+
+            internal MyPipedInputStream(PipedOutputStream Out, int size)
+                : base(Out)
             {
                 buffer = new byte[size];
             }
         }
-        internal virtual void setLocalWindowSizeMax(int foo) { this.lwsize_max = foo; }
-        internal virtual void setLocalWindowSize(int foo) { this.lwsize = foo; }
-        internal virtual void setLocalPacketSize(int foo) { this.lmpsize = foo; }
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.Synchronized)]
-        internal virtual void setRemoteWindowSize(int foo) { this.rwsize = foo; }
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.Synchronized)]
-        internal virtual void addRemoteWindowSize(int foo) { this.rwsize += foo; }
-        internal virtual void setRemotePacketSize(int foo) { this.rmpsize = foo; }
+
+        internal virtual void setLocalWindowSizeMax(int foo)
+        {
+            this.lwsize_max = foo;
+        }
+
+        internal virtual void setLocalWindowSize(int foo)
+        {
+            this.lwsize = foo;
+        }
+
+        internal virtual void setLocalPacketSize(int foo)
+        {
+            this.lmpsize = foo;
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal virtual void setRemoteWindowSize(int foo)
+        {
+            this.rwsize = foo;
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal virtual void addRemoteWindowSize(int foo)
+        {
+            this.rwsize += foo;
+        }
+
+        internal virtual void setRemotePacketSize(int foo)
+        {
+            this.rmpsize = foo;
+        }
 
         public virtual void run()
         {
@@ -291,6 +351,7 @@ namespace Tamir.SharpSsh.jsch
         {
             write(foo, 0, foo.Length);
         }
+
         internal virtual void write(byte[] foo, int s, int l)
         {
             try
@@ -298,8 +359,11 @@ namespace Tamir.SharpSsh.jsch
                 //    if(io.outs!=null)
                 io.put(foo, s, l);
             }
-            catch (NullReferenceException) { }
+            catch (NullReferenceException e)
+            {
+            }
         }
+
         internal virtual void write_ext(byte[] foo, int s, int l)
         {
             try
@@ -307,7 +371,9 @@ namespace Tamir.SharpSsh.jsch
                 //    if(io.out_ext!=null)
                 io.put_ext(foo, s, l);
             }
-            catch (NullReferenceException) { }
+            catch (NullReferenceException e)
+            {
+            }
         }
 
         internal virtual void eof_remote()
@@ -321,72 +387,68 @@ namespace Tamir.SharpSsh.jsch
                     io.outs = null;
                 }
             }
-            catch (NullReferenceException) { }
-            catch (IOException) { }
+            catch (NullReferenceException e)
+            {
+            }
+            catch (IOException e)
+            {
+            }
         }
 
         internal virtual void eof()
         {
-            //System.Out.println("EOF!!!! "+this);
-            //Thread.dumpStack();
             if (_close) return;
             if (eof_local) return;
             eof_local = true;
-            //close=eof;
             try
             {
                 Buffer buf = new Buffer(100);
                 Packet packet = new Packet(buf);
                 packet.reset();
-                buf.putByte((byte)Session.SSH_MSG_CHANNEL_EOF);
+                buf.putByte((byte) Session.SSH_MSG_CHANNEL_EOF);
                 buf.putInt(getRecipient());
                 session.write(packet);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //System.Out.println("Channel.eof");
-                //e.printStackTrace();
             }
-            /*
-			if(!isConnected()){ disconnect(); }
-			*/
         }
 
         /*
-		http://www1.ietf.org/internet-drafts/draft-ietf-secsh-connect-24.txt
+        http://www1.ietf.org/internet-drafts/draft-ietf-secsh-connect-24.txt
 
-	  5.3  Closing a Channel
-		When a party will no longer send more data to a channel, it SHOULD
-		 send SSH_MSG_CHANNEL_EOF.
+      5.3  Closing a Channel
+        When a party will no longer send more data to a channel, it SHOULD
+         send SSH_MSG_CHANNEL_EOF.
 
-				  byte      SSH_MSG_CHANNEL_EOF
-				  uint32    recipient_channel
+                  byte      SSH_MSG_CHANNEL_EOF
+                  uint32    recipient_channel
 
-		No explicit response is sent to this message.  However, the
-		 application may send EOF to whatever is at the other end of the
-		channel.  Note that the channel remains open after this message, and
-		 more data may still be sent In the other direction.  This message
-		 does not consume window space and can be sent even if no window space
-		 is available.
+        No explicit response is sent to this message.  However, the
+         application may send EOF to whatever is at the other end of the
+        channel.  Note that the channel remains open after this message, and
+         more data may still be sent In the other direction.  This message
+         does not consume window space and can be sent even if no window space
+         is available.
 
-		   When either party wishes to terminate the channel, it sends
-		   SSH_MSG_CHANNEL_CLOSE.  Upon receiving this message, a party MUST
-		 send back a SSH_MSG_CHANNEL_CLOSE unless it has already sent this
-		 message for the channel.  The channel is considered closed for a
-		   party when it has both sent and received SSH_MSG_CHANNEL_CLOSE, and
-		 the party may then reuse the channel number.  A party MAY send
-		 SSH_MSG_CHANNEL_CLOSE without having sent or received
-		 SSH_MSG_CHANNEL_EOF.
+           When either party wishes to terminate the channel, it sends
+           SSH_MSG_CHANNEL_CLOSE.  Upon receiving this message, a party MUST
+         send back a SSH_MSG_CHANNEL_CLOSE unless it has already sent this
+         message for the channel.  The channel is considered closed for a
+           party when it has both sent and received SSH_MSG_CHANNEL_CLOSE, and
+         the party may then reuse the channel number.  A party MAY send
+         SSH_MSG_CHANNEL_CLOSE without having sent or received
+         SSH_MSG_CHANNEL_EOF.
 
-				  byte      SSH_MSG_CHANNEL_CLOSE
-				  uint32    recipient_channel
+                  byte      SSH_MSG_CHANNEL_CLOSE
+                  uint32    recipient_channel
 
-		 This message does not consume window space and can be sent even if no
-		 window space is available.
+         This message does not consume window space and can be sent even if no
+         window space is available.
 
-		 It is recommended that any data sent before this message is delivered
-		   to the actual destination, if possible.
-		*/
+         It is recommended that any data sent before this message is delivered
+           to the actual destination, if possible.
+        */
 
         internal virtual void close()
         {
@@ -398,37 +460,39 @@ namespace Tamir.SharpSsh.jsch
                 Buffer buf = new Buffer(100);
                 Packet packet = new Packet(buf);
                 packet.reset();
-                buf.putByte((byte)Session.SSH_MSG_CHANNEL_CLOSE);
+                buf.putByte((byte) Session.SSH_MSG_CHANNEL_CLOSE);
                 buf.putInt(getRecipient());
                 session.write(packet);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //e.printStackTrace();
             }
         }
+
         public virtual bool isClosed()
         {
             return _close;
         }
+
         internal static void disconnect(Session session)
         {
             Channel[] channels = null;
             int count = 0;
             lock (pool)
             {
-                channels = new Channel[pool.size()];
-                for (int i = 0; i < pool.size(); i++)
+                channels = new Channel[pool.Count];
+                for (int i = 0; i < pool.Count; i++)
                 {
                     try
                     {
-                        Channel c = ((Channel)(pool.elementAt(i)));
+                        Channel c = ((Channel) (pool[i]));
                         if (c.session == session)
                         {
                             channels[count++] = c;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                     }
                 }
@@ -438,14 +502,6 @@ namespace Tamir.SharpSsh.jsch
                 channels[i].disconnect();
             }
         }
-
-        /*
-		public void finalize() throws Throwable{
-		  disconnect();
-		  super.finalize();
-		  session=null;
-		}
-		*/
 
         public virtual void disconnect()
         {
@@ -469,12 +525,12 @@ namespace Tamir.SharpSsh.jsch
                     io.close();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //e.printStackTrace();
             }
             io = null;
-            Channel.del(this);
+            del(this);
         }
 
         public virtual bool isConnected()
@@ -493,55 +549,63 @@ namespace Tamir.SharpSsh.jsch
             request.request(session, this);
         }
 
-        //  public String toString(){
-        //      return "Channel: type="+new String(type)+",id="+id+",recipient="+recipient+",window_size="+window_size+",packet_size="+packet_size;
-        //  }
-
-        /*
-		  class OutputThread extends Thread{
-			Channel c;
-			OutputThread(Channel c){ this.c=c;}
-			public void run(){c.output_thread();}
-		  }
-		*/
-
         internal class PassiveInputStream : MyPipedInputStream
         {
             internal PipedOutputStream Out;
-            internal PassiveInputStream(PipedOutputStream Out, int size) : base(Out, size)
+
+            internal PassiveInputStream(PipedOutputStream Out, int size)
+                : base(Out, size)
             {
                 this.Out = Out;
             }
-            internal PassiveInputStream(PipedOutputStream Out) : base(Out)
+
+            internal PassiveInputStream(PipedOutputStream Out)
+                : base(Out)
             {
                 this.Out = Out;
             }
+
             public override void close()
             {
                 if (Out != null)
                 {
-                    this.Out.close();
+                    this.Out.Close();
                 }
                 Out = null;
             }
         }
+
         internal class PassiveOutputStream : PipedOutputStream
         {
-            internal PassiveOutputStream(PipedInputStream In) : base(In)
+            internal PassiveOutputStream(PipedInputStream In)
+                : base(In)
             {
             }
         }
 
-        internal virtual void setExitStatus(int foo) { exitstatus = foo; }
-        public virtual int getExitStatus() { return exitstatus; }
+        internal virtual void setExitStatus(int foo)
+        {
+            exitstatus = foo;
+        }
+
+        public virtual int getExitStatus()
+        {
+            return exitstatus;
+        }
 
         internal virtual void setSession(Session session)
         {
             this.session = session;
         }
-        public virtual Session getSession() { return session; }
-        public virtual int getId() { return id; }
-        //public int getRecipientId(){ return getRecipient(); }
 
+        public virtual Session getSession()
+        {
+            return session;
+        }
+
+        public virtual int getId()
+        {
+            return id;
+        }
     }
 }

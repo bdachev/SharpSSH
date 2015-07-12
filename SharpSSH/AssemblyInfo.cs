@@ -12,11 +12,15 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyCompany("tamirgal.com")]
-[assembly: AssemblyProduct("SharpSSH")]
-[assembly: AssemblyCopyright("Tamir Gal (c) 2007 and jcraft.com")]
+[assembly: AssemblyCopyright("Apache License: Tamir Gal,  jcraft.com, DiffieHellman, Matt Gwagner, 2007 - 2015")]
+// [assembly: AssemblyCompany("tamirgal.com")]
+// [assembly: AssemblyCompany("DiffieHellman")]
+// [assembly: AssemblyCompany("mattgwagner.com")]
 
-[assembly: AssemblyVersion("1.1.2.15")]
+[assembly: AssemblyCompany("Compiled for personal use")]
+[assembly: AssemblyProduct("SharpSSH")]
+[assembly: AssemblyVersion("2.0.2.*")]
+[assembly: System.CLSCompliant(false)]
 
 // In order to sign your assembly you must specify a key to use. Refer to the 
 // Microsoft .NET Framework documentation for more information on assembly signing.

@@ -5,13 +5,14 @@ namespace Tamir.SharpSsh.jsch
     /// <summary>
     /// Summary description for JSchException.
     /// </summary>
-    public class JSchException : java.Exception
+    public class JSchException : Exception
     {
-        public JSchException(Exception innerException = null) : base(innerException)
+        public JSchException(Exception e = null) 
+             : base(e == null ? null : e.Message, innerException: e)
         {
         }
 
-        public JSchException(string msg, Exception innerException = null) : base(msg, innerException)
+        public JSchException(string msg, Exception inner = null) : base(msg, inner)
         {
         }
     }

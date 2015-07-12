@@ -73,7 +73,7 @@
 //			}
 //
 //			try{sftp.sendREAD(handle, offset, len);}
-//			catch(Exception e){ throw new IOException("error"); }
+//			catch(System.Exception e){ throw new IOException("error"); }
 //
 //			sftp.buf.rewind();
 //			int i=io.ins.read(buf.buffer, 0, 13);  // 4 + 1 + 4 + 4
@@ -151,7 +151,8 @@
 //			*/
 //			if(monitor!=null)monitor.end();
 //			try{sftp._sendCLOSE(handle);}
-//			catch(Exception e){throw new IOException("error");}
+//			catch(System.Exception e){throw new IOException("error");}
 //		}
 //	}
 //}
+

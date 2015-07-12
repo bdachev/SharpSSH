@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Tamir.SharpSsh.java.io;
+using Tamir.Streams;
 
 namespace Tamir.SharpSsh.jsch
 {
@@ -54,11 +55,13 @@ namespace Tamir.SharpSsh.jsch
                 this.outs = null;
             }
         }
+
         public void setOutputStream(Stream outs, bool dontclose)
         {
             this.out_dontclose = dontclose;
             setOutputStream(outs);
         }
+
         public void setExtOutputStream(Stream outs)
         {
             if (outs != null)
@@ -70,11 +73,13 @@ namespace Tamir.SharpSsh.jsch
                 this.outs_ext = null;
             }
         }
+
         public void setExtOutputStream(Stream outs, bool dontclose)
         {
             this.outs_ext_dontclose = dontclose;
             setExtOutputStream(outs);
         }
+
         public void setInputStream(Stream ins)
         {
             //ConsoleStream low buffer patch
@@ -82,11 +87,11 @@ namespace Tamir.SharpSsh.jsch
             {
                 if (ins.GetType() == Type.GetType("System.IO.__ConsoleStream"))
                 {
-                    ins = new Tamir.Streams.ProtectedConsoleStream(ins);
+                    ins = new ProtectedConsoleStream(ins);
                 }
                 else if (ins.GetType() == Type.GetType("System.IO.FileStream"))
                 {
-                    ins = new Tamir.Streams.ProtectedConsoleStream(ins);
+                    ins = new ProtectedConsoleStream(ins);
                 }
                 this.ins = new JStream(ins);
             }
@@ -95,6 +100,7 @@ namespace Tamir.SharpSsh.jsch
                 this.ins = null;
             }
         }
+
         public void setInputStream(Stream ins, bool dontclose)
         {
             this.in_dontclose = dontclose;
@@ -106,11 +112,13 @@ namespace Tamir.SharpSsh.jsch
             outs.Write(p.buffer.buffer, 0, p.buffer.index);
             outs.Flush();
         }
+
         internal void put(byte[] array, int begin, int length)
         {
             outs.Write(array, begin, length);
             outs.Flush();
         }
+
         internal void put_ext(byte[] array, int begin, int length)
         {
             outs_ext.Write(array, begin, length);
@@ -139,8 +147,7 @@ namespace Tamir.SharpSsh.jsch
                 }
                 begin += completed;
                 length -= completed;
-            }
-            while (length > 0);
+            } while (length > 0);
         }
 
         public void close()
@@ -150,34 +157,39 @@ namespace Tamir.SharpSsh.jsch
                 if (ins != null && !in_dontclose) ins.Close();
                 ins = null;
             }
-            catch (Exception) { }
+            catch (Exception ee)
+            {
+            }
             try
             {
                 if (outs != null && !out_dontclose) outs.Close();
                 outs = null;
             }
-            catch (Exception) { }
+            catch (Exception ee)
+            {
+            }
             try
             {
                 if (outs_ext != null && !outs_ext_dontclose) outs_ext.Close();
                 outs_ext = null;
             }
-            catch (Exception) { }
+            catch (Exception ee)
+            {
+            }
         }
 
-        //		public void finalize()
-        //		{
-        //			try
-        //			{
-        //				if(ins!=null) ins.Close();
-        //			}
-        //			catch{}
-        //			try
-        //			{
-        //				if(outs!=null) outs.Close();
-        //			}
-        //			catch{}
-        //		}
+//		public void finalize()
+//		{
+//			try
+//			{
+//				if(ins!=null) ins.Close();
+//			}
+//			catch{}
+//			try
+//			{
+//				if(outs!=null) outs.Close();
+//			}
+//			catch{}
+//		}
     }
-
 }

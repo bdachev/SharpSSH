@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 
 namespace Tamir.SharpSsh.jsch.jce
 {
@@ -31,11 +32,12 @@ namespace Tamir.SharpSsh.jsch.jce
 	EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	*/
 
-    public class Random : Tamir.SharpSsh.jsch.Random
+    public class Random : jsch.Random
     {
         private byte[] tmp = new byte[16];
         //private SecureRandom random;
-        private System.Security.Cryptography.RNGCryptoServiceProvider rand;
+        private RNGCryptoServiceProvider rand;
+
         public Random()
         {
             //    random=null;
@@ -51,19 +53,24 @@ namespace Tamir.SharpSsh.jsch.jce
             //	System.out.println(ee); 
             //      }
             //    }
-            rand = new System.Security.Cryptography.RNGCryptoServiceProvider();
+            rand = new RNGCryptoServiceProvider();
         }
-        static int times = 0;
+
+        private static int times = 0;
+
         public void fill(byte[] foo, int start, int len)
         {
             try
             {
-                if (len > tmp.Length) { tmp = new byte[len]; }
+                if (len > tmp.Length)
+                {
+                    tmp = new byte[len];
+                }
                 //random.nextBytes(tmp);
                 rand.GetBytes(tmp);
                 Array.Copy(tmp, 0, foo, start, len);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 times++;
                 Console.WriteLine(times + ") Array.Copy(tmp={0}, 0, foo={1}, {2}, {3}", tmp.Length, foo.Length, start, len);
@@ -71,5 +78,4 @@ namespace Tamir.SharpSsh.jsch.jce
             }
         }
     }
-
 }

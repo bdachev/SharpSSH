@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Timers;
+using Tamir.SharpSsh.java.io;
 using Tamir.SharpSsh.jsch;
-using System.Collections;
+using Tamir.Streams;
 
 /* 
  * Sftp.cs
@@ -36,222 +39,317 @@ using System.Collections;
 
 namespace Tamir.SharpSsh
 {
-	public class Sftp : SshTransferProtocolBase
-	{
-		private MyProgressMonitor m_monitor;
-		private bool cancelled = false;
+    public class Sftp : SshTransferProtocolBase
+    {
+        private MyProgressMonitor m_monitor;
+        private bool cancelled = false;
 
-		public Sftp(string sftpHost, string user, string password)
-			: base(sftpHost, user, password)
-		{
-			Init();
-		}
-
-		public Sftp(string sftpHost, string user)
-			: base(sftpHost, user)
-		{
-			Init();
-		}
-
-		private void Init()
-		{
-			m_monitor = new MyProgressMonitor(this);
-		}
-
-		protected override string ChannelType
-		{
-			get { return "sftp"; }
-		}
-
-		private ChannelSftp SftpChannel
-		{
-			get { return (ChannelSftp)m_channel; }
-		}
-
-		public override void Cancel()
-		{
-			cancelled = true;
-		}
-
-		//Get
-
-		public void Get(string fromFilePath)
-		{
-			Get(fromFilePath, ".");
-		}
-
-		public void Get(string[] fromFilePaths)
-		{
-			for (int i = 0; i < fromFilePaths.Length; i++)
-			{
-				Get(fromFilePaths[i]);
-			}
-		}
-
-		public void Get(string[] fromFilePaths, string toDirPath)
-		{
-			for (int i = 0; i < fromFilePaths.Length; i++)
-			{
-				Get(fromFilePaths[i], toDirPath);
-			}
-		}
-
-		public override void Get(string fromFilePath, string toFilePath)
-		{
-			cancelled=false;
-			SftpChannel.get(fromFilePath, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
-		}
-
-        public void GetWithStream(string fromFilePath, Tamir.SharpSsh.java.io.OutputStream stream)
+        public Sftp(string sftpHost, string user, string password)
+            : base(sftpHost, user, password)
         {
-            cancelled = false;
-            SftpChannel.get(fromFilePath, stream, m_monitor);
+            Init();
         }
 
-		//Put
-
-		public void Put(string fromFilePath)
-		{
-			Put(fromFilePath, ".");
-		}
-
-		public void Put(string[] fromFilePaths)
-		{
-			for (int i = 0; i < fromFilePaths.Length; i++)
-			{
-				Put(fromFilePaths[i]);
-			}
-		}
-
-		public void Put(string[] fromFilePaths, string toDirPath)
-		{
-			for (int i = 0; i < fromFilePaths.Length; i++)
-			{
-				Put(fromFilePaths[i], toDirPath);
-			}
-		}
-
-		public override void Put(string fromFilePath, string toFilePath)
-		{
-			cancelled=false;
-			SftpChannel.put(fromFilePath, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
-		}
-
-        public void PutWithStream(Tamir.SharpSsh.java.io.InputStream stream, string toDirPath)
+        public Sftp(string sftpHost, string user)
+            : base(sftpHost, user)
         {
-            cancelled = false;
-            SftpChannel.put(stream, toDirPath, m_monitor) ;
+            Init();
         }
 
-		//MkDir
+        private void Init()
+        {
+            m_monitor = new MyProgressMonitor(this);
+        }
 
-		public override  void Mkdir(string directory)
-		{
-			SftpChannel.mkdir(directory);
-		}
+        protected override string ChannelType
+        {
+            get { return "sftp"; }
+        }
 
-		//Ls
+        private ChannelSftp SftpChannel
+        {
+            get { return (ChannelSftp) m_channel; }
+        }
 
-		public List<String> GetFileList(string path)
-		{
-			List<String> list = new List<string>();
-			foreach(Tamir.SharpSsh.jsch.ChannelSftp.LsEntry entry in SftpChannel.ls(path))
-			{
-			    var filename = entry.getFilename().ToString();
-			    if (filename == "." || filename == "..") 
-                    continue;
-				list.Add(filename);
-			}
-			return list;
-		}
+        public override void Cancel()
+        {
+            cancelled = true;
+        }
 
-        //rm
+        //Get
+
+        public void Get(string fromFilePath)
+        {
+            Get(fromFilePath, ".");
+        }
+
+        public void Get(string[] fromFilePaths)
+        {
+            for (int i = 0; i < fromFilePaths.Length; i++)
+            {
+                Get(fromFilePaths[i]);
+            }
+        }
+
+        public void Get(string[] fromFilePaths, string toDirPath)
+        {
+            for (int i = 0; i < fromFilePaths.Length; i++)
+            {
+                Get(fromFilePaths[i], toDirPath);
+            }
+        }
+
+        public override void Get(string fromFilePath, string toFilePath)
+        {
+            cancelled = false;
+            SftpChannel.get(fromFilePath, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
+        }
+
+        /// <summary>
+        /// Get content from remote file and save to stream
+        /// </summary>
+        /// <param name="fromFilePath"></param>
+        /// <param name="toStream"></param>
+        /// <remarks>Added by Holger Boskugel; opensource@vbwebprofi.de; Berlin, Germany</remarks>
+        public void Get(string fromFilePath, OutputStream toStream)
+        {
+            cancelled = false;
+            SftpChannel.get(fromFilePath, toStream, m_monitor, ChannelSftp.OVERWRITE, 0);
+        }
+
+        /// <summary>
+        /// Get content from remote file and save to stream
+        /// </summary>
+        /// <param name="fromFilePath"></param>
+        /// <param name="toStream"></param>
+        /// <remarks>Added by Holger Boskugel; opensource@vbwebprofi.de; Berlin, Germany</remarks>
+        public void Get(string fromFilePath, Stream toStream)
+        {
+            this.Get(fromFilePath, new OutputStreamWrapper(toStream));
+        }
+
+        /// <summary>
+        /// Get binary data from remote file
+        /// </summary>
+        /// <param name="fromFilePath"></param>
+        /// <param name="toData"></param>
+        /// <remarks>Added by Holger Boskugel; opensource@vbwebprofi.de; Berlin, Germany</remarks>
+        public void Get(string fromFilePath, out byte[] toData)
+        {
+            MemoryStream memoryStream = new MemoryStream();
+
+            this.Get(fromFilePath, new OutputStreamWrapper(memoryStream));
+
+            memoryStream.Flush();
+            memoryStream.Close();
+
+            toData = memoryStream.ToArray();
+        }
+
+        //Put
+
+        public void Put(string fromFilePath)
+        {
+            Put(fromFilePath, ".");
+        }
+
+        public void Put(string[] fromFilePaths)
+        {
+            for (int i = 0; i < fromFilePaths.Length; i++)
+            {
+                Put(fromFilePaths[i]);
+            }
+        }
+
+        public void Put(string[] fromFilePaths, string toDirPath)
+        {
+            for (int i = 0; i < fromFilePaths.Length; i++)
+            {
+                Put(fromFilePaths[i], toDirPath);
+            }
+        }
+
+        public override void Put(string fromFilePath, string toFilePath)
+        {
+            cancelled = false;
+            SftpChannel.put(fromFilePath, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
+        }
+
+        /// <summary>
+        /// Put content from local stream to remote file
+        /// </summary>
+        /// <param name="fromStream"></param>
+        /// <param name="toFilePath"></param>
+        /// <remarks>
+        /// Progress monitor not used in method (Stream length not known)
+        /// Added by Holger Boskugel; opensource@vbwebprofi.de; Berlin, Germany
+        /// </remarks>
+        public void Put(InputStream fromStream, string toFilePath)
+        {
+            cancelled = false;
+            // MyProgressMonitor can't be initialized with length of InputStream
+            //SftpChannel.put(fromStream, toFilePath, m_monitor, ChannelSftp.OVERWRITE);
+            SftpChannel.put(fromStream, toFilePath, null, ChannelSftp.OVERWRITE);
+        }
+
+        /// <summary>
+        /// Put content from local stream to remote file
+        /// </summary>
+        /// <param name="fromStream"></param>
+        /// <param name="toFilePath"></param>
+        /// <remarks>
+        /// Progress monitor used, if Stream supports Length property
+        /// Added by Holger Boskugel; opensource@vbwebprofi.de; Berlin, Germany
+        /// </remarks>
+        public void Put(Stream fromStream, string toFilePath)
+        {
+            long lngMax;
+
+            try
+            {
+                lngMax = fromStream.Length;
+            }
+            catch
+            {
+                lngMax = -1;
+            }
+
+            if (lngMax == -1)
+            {
+                SftpChannel.put(new InputStreamWrapper(fromStream), toFilePath, null, ChannelSftp.OVERWRITE);
+            }
+            else
+            {
+                m_monitor.init(SftpProgressMonitor.PUT, "*Stream*", toFilePath, lngMax);
+
+                SftpChannel.put(new InputStreamWrapper(fromStream), toFilePath, m_monitor, ChannelSftp.OVERWRITE);
+            }
+        }
+
+        /// <summary>
+        /// Put binary data to remote file
+        /// </summary>
+        /// <param name="fromData"></param>
+        /// <param name="toFilePath"></param>
+        /// <remarks>Added by Holger Boskugel; opensource@vbwebprofi.de; Berlin, Germany</remarks>
+        public void Put(byte[] fromData, string toFilePath)
+        {
+            m_monitor.init(SftpProgressMonitor.PUT, "*BinaryData*", toFilePath, fromData.LongLength);
+
+            SftpChannel.put(new InputStreamWrapper(new MemoryStream(fromData)), toFilePath, m_monitor, ChannelSftp.OVERWRITE);
+        }
+
+        //MkDir
+
+        public override void Mkdir(string directory)
+        {
+            SftpChannel.mkdir(directory);
+        }
+
+        //Ls
+
+        public IEnumerable<ChannelSftp.LsEntry> GetFileList(string path)
+        {
+            foreach (ChannelSftp.LsEntry entry in SftpChannel.ls(path))
+            {
+                // #8 - don't list directories when running a get file list
+                if (!entry.Attributes.isDir())
+                {
+                    yield return entry;
+                }
+            }
+        }
+
+        public IEnumerable<ChannelSftp.LsEntry> GetDirectoryList(string path)
+        {
+            foreach (ChannelSftp.LsEntry entry in SftpChannel.ls(path))
+            {
+                if (entry.Attributes.isDir())
+                {
+                    yield return entry;
+                }
+            }
+        }
+
+        //Rm
 
         public void DeleteFile(string path)
         {
             SftpChannel.rm(path);
         }
 
-        // GetWorkingDirectory
-
-        public string GetWorkingDirectory()
+        public void RenameFile(String oldPath, String newPath)
         {
-            return SftpChannel.pwd();
-        }
-
-        public override void Delete(string path)
-        {
-            throw new NotImplementedException();
+            SftpChannel.rename(oldPath, newPath);
         }
 
         #region ProgressMonitor Implementation
 
         private class MyProgressMonitor : SftpProgressMonitor
-		{
-			private long transferred = 0;
-			private long total = 0;
-			private int elapsed = -1;
-			private Sftp m_sftp;
-			private string src;
-			private string dest;
+        {
+            private long transferred = 0;
+            private long total = 0;
+            private int elapsed = -1;
+            private Sftp m_sftp;
+            private string src;
+            private string dest;
 
-			System.Timers.Timer timer;
+            private Timer timer;
 
-			public MyProgressMonitor(Sftp sftp)
-			{
-				m_sftp = sftp;
-			}
+            public MyProgressMonitor(Sftp sftp)
+            {
+                m_sftp = sftp;
+            }
 
-			public override void init(int op, String src, String dest, long max)
-			{
-				this.src=src;
-				this.dest=dest;
-				this.elapsed = 0;
-				this.total = max;
-				timer = new System.Timers.Timer(1000);
-				timer.Start();
-				timer.Elapsed += new System.Timers.ElapsedEventHandler(timer_Elapsed);
+            public override void init(int op, String src, String dest, long max)
+            {
+                this.src = src;
+                this.dest = dest;
+                this.elapsed = 0;
+                this.total = max;
+                timer = new Timer(1000);
+                timer.Start();
+                timer.Elapsed += new ElapsedEventHandler(timer_Elapsed);
 
-				string note;
-				if (op.Equals(GET))
-				{
-					note = "Downloading " + System.IO.Path.GetFileName( src ) + "...";
-				}
-				else
-				{
-					note = "Uploading " + System.IO.Path.GetFileName( src ) + "...";
-				}
-				m_sftp.SendStartMessage(src, dest, (int)total, note);
-			}
-			public override bool count(long c)
-			{
-				this.transferred += c;
-				string note = ("Transfering... [Elapsed time: " + elapsed + "]");
-				m_sftp.SendProgressMessage(src, dest, (int)transferred, (int)total, note);
-				return !m_sftp.cancelled;
-			}
-			public override void end()
-			{
-			    if (timer != null)
-			    {
-			        timer.Stop();
-			        timer.Dispose();
-			    }
-			    string note = ("Done in " + elapsed + " seconds!");
-				m_sftp.SendEndMessage(src, dest, (int)transferred, (int)total, note);
-				transferred = 0;
-				total = 0;
-				elapsed = -1;
-				src=null;
-				dest=null;
-			}
+                string note;
+                if (op.Equals(GET))
+                {
+                    note = "Downloading " + Path.GetFileName(src) + "...";
+                }
+                else
+                {
+                    note = "Uploading " + Path.GetFileName(src) + "...";
+                }
+                m_sftp.SendStartMessage(src, dest, (int) total, note);
+            }
 
-			private void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-			{
-				this.elapsed++;
-			}
-		}
-        
-		#endregion ProgressMonitor Implementation
-	}	
+            public override bool count(long c)
+            {
+                this.transferred += c;
+                string note = ("Transfering... [Elapsed time: " + elapsed + "]");
+                m_sftp.SendProgressMessage(src, dest, (int) transferred, (int) total, note);
+                return !m_sftp.cancelled;
+            }
+
+            public override void end()
+            {
+                timer.Stop();
+                timer.Dispose();
+                string note = ("Done in " + elapsed + " seconds!");
+                m_sftp.SendEndMessage(src, dest, (int) transferred, (int) total, note);
+                transferred = 0;
+                total = 0;
+                elapsed = -1;
+                src = null;
+                dest = null;
+            }
+
+            private void timer_Elapsed(object sender, ElapsedEventArgs e)
+            {
+                this.elapsed++;
+            }
+        }
+
+        #endregion ProgressMonitor Implementation
+    }
 }

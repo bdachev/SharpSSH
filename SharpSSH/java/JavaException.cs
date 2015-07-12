@@ -5,13 +5,13 @@ namespace Tamir.SharpSsh.java
     /// <summary>
     /// Summary description for Exception.
     /// </summary>
-    public class Exception : Ex
+    public class JavaException : Ex
     {
-        public Exception(Ex innerException = null) : base(string.Empty, innerException)
+        public JavaException(Ex innerException = null) : base(string.Empty, innerException)
         {
         }
 
-        public Exception(string msg, Ex innerException = null) : base(msg, innerException)
+        public JavaException(string msg, Ex innerException = null) : base(msg, innerException)
         {
         }
 

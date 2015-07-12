@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Tamir.SharpSsh.java.io;
 
 namespace Tamir.Streams
 {
@@ -32,7 +33,8 @@ namespace Tamir.Streams
      * @see     java.io.PipedOutputStream
      * @since   JDK1.0
      */
-    public class PipedInputStream : Tamir.SharpSsh.java.io.InputStream
+
+    public class PipedInputStream : InputStream
     {
         internal bool closedByWriter = false;
         internal volatile bool closedByReader = false;
@@ -83,6 +85,7 @@ namespace Tamir.Streams
 		 * @param      src   the stream to connect to.
 		 * @exception  IOException  if an I/O error occurs.
 		 */
+
         public PipedInputStream(PipedOutputStream src)
         {
             connect(src);
@@ -97,6 +100,7 @@ namespace Tamir.Streams
 		 * @see     java.io.PipedInputStream#connect(java.io.PipedOutputStream)
 		 * @see     java.io.PipedOutputStream#connect(java.io.PipedInputStream)
 		 */
+
         public PipedInputStream()
         {
         }
@@ -125,6 +129,7 @@ namespace Tamir.Streams
 		 * @param      src   The piped output stream to connect to.
 		 * @exception  IOException  if an I/O error occurs.
 		 */
+
         public virtual void connect(PipedOutputStream src)
         {
             src.connect(this);
@@ -137,6 +142,7 @@ namespace Tamir.Streams
 		 * @exception IOException If the pipe is broken.
 		 * @since     JDK1.1
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         internal void receive(int b)
         {
@@ -164,6 +170,7 @@ namespace Tamir.Streams
 		 * @param len the maximum number of bytes received
 		 * @exception IOException If an I/O error has occurred.
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         internal void receive(byte[] b, int off, int len)
         {
@@ -248,6 +255,7 @@ namespace Tamir.Streams
 		 * Notifies all waiting threads that the last byte of data has been
 		 * received.
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         internal void receivedLast()
         {
@@ -273,6 +281,7 @@ namespace Tamir.Streams
 		 *             stream is reached.
 		 * @exception  IOException  if the pipe is broken.
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         public virtual new int read()
         {
@@ -285,13 +294,14 @@ namespace Tamir.Streams
                 throw new IOException("Pipe closed");
             }
             else if (writeSide != null && !writeSide.IsAlive
-                && !closedByWriter && (m_in < 0))
+                     && !closedByWriter && (m_in < 0))
             {
                 throw new IOException("Write end dead");
             }
 
             readSide = Thread.CurrentThread;
             int trials = 2;
+
             while (m_in < 0)
             {
                 if (closedByWriter)
@@ -299,21 +309,18 @@ namespace Tamir.Streams
                     /* closed by writer, return EOF */
                     return -1;
                 }
+
                 if ((writeSide != null) && (!writeSide.IsAlive) && (--trials < 0))
                 {
                     throw new IOException("Pipe broken");
                 }
+
                 /* might be a writer waiting */
                 Monitor.PulseAll(this);
-                try
-                {
-                    Monitor.Wait(this, 1000);
-                }
-                catch (ThreadInterruptedException ex)
-                {
-                    throw ex;
-                }
+
+                Monitor.Wait(this, 1000);
             }
+
             int ret = buffer[m_out++] & 0xFF;
             if (m_out >= buffer.Length)
             {
@@ -345,15 +352,16 @@ namespace Tamir.Streams
 		 *             the stream has been reached.
 		 * @exception  IOException  if an I/O error occurs.
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public override int read(byte[] b, int off, int len)
+        public override int Read(byte[] b, int off, int len)
         {
             if (b == null)
             {
                 throw new NullReferenceException();
             }
             else if ((off < 0) || (off > b.Length) || (len < 0) ||
-                ((off + len) > b.Length) || ((off + len) < 0))
+                     ((off + len) > b.Length) || ((off + len) < 0))
             {
                 throw new IndexOutOfRangeException();
             }
@@ -397,6 +405,7 @@ namespace Tamir.Streams
 		 * @exception  IOException  if an I/O error occurs.
 		 * @since   JDK1.0.2
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         public virtual int available()
         {
@@ -416,6 +425,7 @@ namespace Tamir.Streams
 		 *
 		 * @exception  IOException  if an I/O error occurs.
 		 */
+
         public override void close()
         {
             closedByReader = true;
@@ -433,12 +443,6 @@ namespace Tamir.Streams
 
         ///////////////////////////////////////
 
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return this.read(buffer, offset, count);
-        }
-
         public override int ReadByte()
         {
             return this.read();
@@ -451,36 +455,32 @@ namespace Tamir.Streams
         public override void Write(byte[] buffer, int offset, int count)
         {
         }
+
         public override void Close()
         {
             base.Close();
             this.close();
         }
+
         public override bool CanRead
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
+
         public override bool CanWrite
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
+
         public override bool CanSeek
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
+
         public override void Flush()
         {
-
         }
+
         public override long Length
         {
             get
@@ -493,21 +493,18 @@ namespace Tamir.Streams
                 }
             }
         }
+
         public override long Position
         {
-            get
-            {
-                return m_out;
-            }
-            set
-            {
-                throw new IOException("Setting the position of this stream is not supported");
-            }
+            get { return m_out; }
+            set { throw new IOException("Setting the position of this stream is not supported"); }
         }
+
         public override void SetLength(long value)
         {
             throw new IOException("Setting the length of this stream is not supported");
         }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             return 0;

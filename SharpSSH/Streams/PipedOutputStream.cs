@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Tamir.SharpSsh.java.io;
 
 namespace Tamir.Streams
 {
@@ -25,9 +27,9 @@ namespace Tamir.Streams
 	 * @see     java.io.PipedInputStream
 	 * @since   JDK1.0
 	 */
-    public class PipedOutputStream : Tamir.SharpSsh.java.io.OutputStream
-    {
 
+    public class PipedOutputStream : OutputStream
+    {
         /* REMIND: identification of the read and write sides needs to be
 			more sophisticated.  Either using thread groups (but what about
 			pipes within a thread?) or using finalization (but it may be a
@@ -42,6 +44,7 @@ namespace Tamir.Streams
 		* @param      snk   The piped input stream to connect to.
 		* @exception  IOException  if an I/O error occurs.
 		*/
+
         public PipedOutputStream(PipedInputStream snk)
         {
             connect(snk);
@@ -55,6 +58,7 @@ namespace Tamir.Streams
 		* @see     java.io.PipedInputStream#connect(java.io.PipedOutputStream)
 		* @see     java.io.PipedOutputStream#connect(java.io.PipedInputStream)
 		*/
+
         public PipedOutputStream()
         {
         }
@@ -77,6 +81,7 @@ namespace Tamir.Streams
 		 * @param      snk   the piped input stream to connect to.
 		 * @exception  IOException  if an I/O error occurs.
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         public virtual void connect(PipedInputStream snk)
         {
@@ -92,6 +97,7 @@ namespace Tamir.Streams
             snk.m_in = -1;
             snk.m_out = 0;
             snk.connected = true;
+            int t = 0;
         }
 
         /**
@@ -105,6 +111,7 @@ namespace Tamir.Streams
 		 * @param      b   the <code>byte</code> to be written.
 		 * @exception  IOException  if an I/O error occurs.
 		 */
+
         public virtual void write(int b)
         {
             if (sink == null)
@@ -126,7 +133,8 @@ namespace Tamir.Streams
 		 * @param      len   the number of bytes to write.
 		 * @exception  IOException  if an I/O error occurs.
 		 */
-        public override void write(byte[] b, int off, int len)
+
+        public override void Write(byte[] b, int off, int len)
         {
             if (sink == null)
             {
@@ -137,7 +145,7 @@ namespace Tamir.Streams
                 throw new NullReferenceException();
             }
             else if ((off < 0) || (off > b.Length) || (len < 0) ||
-                ((off + len) > b.Length) || ((off + len) < 0))
+                     ((off + len) > b.Length) || ((off + len) < 0))
             {
                 throw new IndexOutOfRangeException();
             }
@@ -150,7 +158,7 @@ namespace Tamir.Streams
 
         public virtual void write(byte[] b)
         {
-            write(b, 0, b.Length);
+            Write(b, 0, b.Length);
         }
 
         /**
@@ -160,15 +168,16 @@ namespace Tamir.Streams
 		 *
 		 * @exception IOException if an I/O error occurs.
 		 */
+
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public override void flush()
+        public override void Flush()
         {
             if (sink != null)
             {
                 lock (sink)
                 {
                     //sink.notifyAll();
-                    System.Threading.Monitor.PulseAll(sink);
+                    Monitor.PulseAll(sink);
                 }
             }
         }
@@ -180,7 +189,8 @@ namespace Tamir.Streams
 		 *
 		 * @exception  IOException  if an I/O error occurs.
 		 */
-        public override void close()
+
+        public override void Close()
         {
             if (sink != null)
             {
@@ -206,70 +216,40 @@ namespace Tamir.Streams
             this.write(value);
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            this.write(buffer, offset, count);
-        }
-        public virtual void Write(byte[] buffer)
-        {
-            this.Write(buffer, 0, buffer.Length);
-        }
-        public override void Close()
-        {
-            base.Close();
-            this.close();
-        }
         public override bool CanRead
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
+
         public override bool CanWrite
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
+
         public override bool CanSeek
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
-        public override void Flush()
-        {
-            this.flush();
-        }
+
         public override long Length
         {
-            get
-            {
-                return sink.Length;
-            }
+            get { return sink.Length; }
         }
+
         public override long Position
         {
-            get
-            {
-                return sink.m_in;
-            }
-            set
-            {
-                throw new IOException("Setting the position of this stream is not supported");
-            }
+            get { return sink.m_in; }
+            set { throw new IOException("Setting the position of this stream is not supported"); }
         }
+
         public override void SetLength(long value)
         {
             throw new IOException("Setting the length of this stream is not supported");
         }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             return 0;
         }
     }
-
 }

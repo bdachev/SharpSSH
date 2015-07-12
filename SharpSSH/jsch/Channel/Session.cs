@@ -1,21 +1,19 @@
 //using System;
+
+using System;
+using System.Collections;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Tamir.SharpSsh.java;
-using Tamir.SharpSsh.java.util;
-using Tamir.SharpSsh.java.net;
 using Tamir.SharpSsh.java.lang;
-using Exception = System.Exception;
-using NullReferenceException = System.NullReferenceException;
-using ThreadInterruptedException = System.Threading.ThreadInterruptedException;
+using Tamir.SharpSsh.java.net;
 
 namespace Tamir.SharpSsh.jsch
 {
-
-
-    public class Session : Runnable
+    public class Session : JavaRunnable
     {
-        private static String version = "SharpSSH-" + Tamir.SharpSsh.SshBase.Version.ToString() + "-JSCH-0.1.28";
+        private static String version = "SharpSSH-" + SshBase.Version.ToString() + "-JSCH-0.1.28";
 
         // http://ietf.org/internet-drafts/draft-ietf-secsh-assignednumbers-01.txt
         internal const int SSH_MSG_DISCONNECT = 1;
@@ -54,8 +52,8 @@ namespace Tamir.SharpSsh.jsch
         internal const int SSH_MSG_CHANNEL_SUCCESS = 99;
         internal const int SSH_MSG_CHANNEL_FAILURE = 100;
 
-        private byte[] V_S;                                 // server version
-        private byte[] V_C = ("SSH-2.0-" + version).getBytes(); // client version
+        private byte[] V_S; // server version
+        private byte[] V_C = ("SSH-2.0-" + version).GetBytes(); // client version
 
         private byte[] I_C; // the payload of the client's SSH_MSG_KEXINIT
         private byte[] I_S; // the payload of the server's SSH_MSG_KEXINIT
@@ -90,7 +88,7 @@ namespace Tamir.SharpSsh.jsch
 
         private bool isAuthed = false;
 
-        private Thread connectThread = null;
+        private JavaThread connectThread = null;
 
         internal bool x11_forwarding = false;
 
@@ -106,7 +104,7 @@ namespace Tamir.SharpSsh.jsch
 
         private Hashtable config = null;
 
-        private Proxy proxy = null;
+        private IProxy proxy = null;
         private UserInfo userinfo;
 
         internal String host = "127.0.0.1";
@@ -141,12 +139,13 @@ namespace Tamir.SharpSsh.jsch
             {
                 try
                 {
-                    Class c = Class.forName(getConfig("random"));
-                    random = (Random)(c.newInstance());
+                    var c = Type.GetType(getConfig("random"));
+                    random = (Random)Activator.CreateInstance(c);
+
                 }
                 catch (Exception e)
                 {
-                    System.Console.Error.WriteLine("connect: random " + e);
+                    Console.Error.WriteLine("connect: random " + e);
                 }
             }
             Packet.setRandom(random);
@@ -163,7 +162,7 @@ namespace Tamir.SharpSsh.jsch
                     {
                         lock (proxy)
                         {
-                            proxy.close();
+                            proxy.Close();
                         }
                     }
                 }
@@ -193,10 +192,10 @@ namespace Tamir.SharpSsh.jsch
                 {
                     lock (proxy)
                     {
-                        proxy.connect(socket_factory, host, port, connectTimeout);
-                        io.setInputStream(proxy.getInputStream());
-                        io.setOutputStream(proxy.getOutputStream());
-                        socket = proxy.getSocket();
+                        proxy.Connect(socket_factory, host, port, connectTimeout);
+                        io.setInputStream(proxy.InputStream);
+                        io.setOutputStream(proxy.OutputStream);
+                        socket = proxy.Socket;
                     }
                 }
 
@@ -209,14 +208,14 @@ namespace Tamir.SharpSsh.jsch
 
                 while (true)
                 {
-
                     i = 0;
                     j = 0;
                     while (i < buf.buffer.Length)
                     {
                         j = io.getByte();
                         if (j < 0) break;
-                        buf.buffer[i] = (byte)j; i++;
+                        buf.buffer[i] = (byte)j;
+                        i++;
                         if (j == 10) break;
                     }
                     if (j < 0)
@@ -225,25 +224,27 @@ namespace Tamir.SharpSsh.jsch
                     }
 
                     if (buf.buffer[i - 1] == 10)
-                    {    // 0x0a
+                    {
+                        // 0x0a
                         i--;
                         if (buf.buffer[i - 1] == 13)
-                        {  // 0x0d
+                        {
+                            // 0x0d
                             i--;
                         }
                     }
 
                     if (i > 4 && (i != buf.buffer.Length) &&
                         (buf.buffer[0] != 'S' || buf.buffer[1] != 'S' ||
-                        buf.buffer[2] != 'H' || buf.buffer[3] != '-'))
+                         buf.buffer[2] != 'H' || buf.buffer[3] != '-'))
                     {
                         //System.err.println(new String(buf.buffer, 0, i);
                         continue;
                     }
 
                     if (i == buf.buffer.Length ||
-                        i < 7 ||                                      // SSH-1.99 or SSH-2.0
-                        (buf.buffer[4] == '1' && buf.buffer[6] != '9')  // SSH-1.5
+                        i < 7 || // SSH-1.99 or SSH-2.0
+                        (buf.buffer[4] == '1' && buf.buffer[6] != '9') // SSH-1.5
                         )
                     {
                         throw new JSchException("invalid server's version String");
@@ -251,14 +252,12 @@ namespace Tamir.SharpSsh.jsch
                     break;
                 }
 
-                V_S = new byte[i]; Tamir.SharpSsh.java.System.arraycopy(buf.buffer, 0, V_S, 0, i);
-                //System.Console.WriteLine("V_S: ("+i+") ["+new String(V_S)+"]");
-
-                //io.put(V_C, 0, V_C.Length); io.put("\n".getBytes(), 0, 1);
+                V_S = new byte[i];
+                Array.Copy(buf.buffer, 0, V_S, 0, i);
                 {
                     // Some Cisco devices will miss to read '\n' if it is sent separately.
                     byte[] foo = new byte[V_C.Length + 1];
-                    Tamir.SharpSsh.java.System.arraycopy(V_C, 0, foo, 0, V_C.Length);
+                    Array.Copy(V_C, 0, foo, 0, V_C.Length);
                     foo[foo.Length - 1] = (byte)'\n';
                     io.put(foo, 0, foo.Length);
                 }
@@ -295,7 +294,10 @@ namespace Tamir.SharpSsh.jsch
                     }
                 }
 
-                try { checkHost(host, kex); }
+                try
+                {
+                    checkHost(host, kex);
+                }
                 catch (JSchException ee)
                 {
                     in_kex = false;
@@ -329,7 +331,7 @@ namespace Tamir.SharpSsh.jsch
                     methods = usn.getMethods();
                     if (methods != null)
                     {
-                        methods = methods.toLowerCase();
+                        methods = methods.ToLower();
                     }
                     else
                     {
@@ -338,38 +340,29 @@ namespace Tamir.SharpSsh.jsch
                     }
                 }
 
-                // loop:
                 while (true)
                 {
-
-                    //System.Console.WriteLine("methods: "+methods);
-
-                    while (!auth &&
-                        methods != null && methods.Length() > 0)
+                    while (!auth && methods != null && methods.Length > 0)
                     {
-
-                        //System.Console.WriteLine("  methods: "+methods);
-
                         UserAuth us = null;
-                        if (methods.startsWith("publickey"))
+                        if (methods.StartsWith("publickey"))
                         {
-                            //System.Console.WriteLine("   jsch.identities.size()="+jsch.identities.size());
                             lock (jsch.identities)
                             {
-                                if (jsch.identities.size() > 0)
+                                if (jsch.identities.Count > 0)
                                 {
                                     us = new UserAuthPublicKey(userinfo);
                                 }
                             }
                         }
-                        else if (methods.startsWith("keyboard-interactive"))
+                        else if (methods.StartsWith("keyboard-interactive"))
                         {
                             if (userinfo is UIKeyboardInteractive)
                             {
                                 us = new UserAuthKeyboardInteractive(userinfo);
                             }
                         }
-                        else if (methods.startsWith("password"))
+                        else if (methods.StartsWith("password"))
                         {
                             us = new UserAuthPassword(userinfo);
                         }
@@ -380,32 +373,26 @@ namespace Tamir.SharpSsh.jsch
                                 auth = us.start(this);
                                 auth_cancel = false;
                             }
-                            catch (JSchAuthCancelException)
+                            catch (JSchAuthCancelException ee)
                             {
-                                //System.Console.WriteLine(ee);
                                 auth_cancel = true;
                             }
                             catch (JSchPartialAuthException ee)
                             {
                                 methods = ee.getMethods();
-                                //System.Console.WriteLine("PartialAuth: "+methods);
                                 auth_cancel = false;
-                                continue;//loop;
-                            }
-                            catch (RuntimeException ee)
-                            {
-                                throw ee;
+                                continue;
                             }
                             catch (Exception ee)
                             {
-                                System.Console.WriteLine("ee: " + ee); // SSH_MSG_DISCONNECT: 2 Too many authentication failures
+                                Console.WriteLine("ee: " + ee);
                             }
                         }
                         if (!auth)
                         {
-                            int comma = methods.indexOf(",");
+                            int comma = methods.IndexOf(",");
                             if (comma == -1) break;
-                            methods = methods.subString(comma + 1);
+                            methods = methods.Substring(comma + 1);
                         }
                     }
                     break;
@@ -419,9 +406,9 @@ namespace Tamir.SharpSsh.jsch
                 if (auth)
                 {
                     isAuthed = true;
-                    connectThread = new Thread(this);
-                    connectThread.setName("Connect thread " + host + " session");
-                    connectThread.start();
+                    connectThread = new JavaThread(this);
+                    connectThread.Name("Connect thread " + host + " session");
+                    connectThread.Start();
                     return;
                 }
                 if (auth_cancel)
@@ -438,17 +425,14 @@ namespace Tamir.SharpSsh.jsch
                         packet.reset();
                         buf.putByte((byte)SSH_MSG_DISCONNECT);
                         buf.putInt(3);
-                        buf.putString(new String(e.ToString()).getBytes());
-                        buf.putString(new String("en").getBytes());
+                        buf.putString(new JavaString(e.ToString()).GetBytes());
+                        buf.putString(new JavaString("en").GetBytes());
                         write(packet);
                         disconnect();
                     }
                     catch (Exception) { }
                 }
-
                 _isConnected = false;
-                //e.printStackTrace();
-                if (e is RuntimeException) throw (RuntimeException)e;
                 if (e is JSchException) throw (JSchException)e;
                 throw new JSchException("Session.connect: " + e);
             }
@@ -458,39 +442,16 @@ namespace Tamir.SharpSsh.jsch
         {
             int j = buf.getInt();
             if (j != buf.getLength())
-            {    // packet was compressed and
-                buf.getByte();           // j is the size of deflated packet.
+            {
+                // packet was compressed and
+                buf.getByte(); // j is the size of deflated packet.
                 I_S = new byte[buf.index - 5];
             }
             else
             {
                 I_S = new byte[j - 1 - buf.getByte()];
             }
-            Tamir.SharpSsh.java.System.arraycopy(buf.buffer, buf.s, I_S, 0, I_S.Length);
-            /*
-			try{
-			byte[] tmp=new byte[I_S.Length];
-			Tamir.SharpSsh.java.System.arraycopy(I_S, 0, tmp, 0, I_S.Length);
-			Buffer tmpb=new Buffer(tmp);
-			System.Console.WriteLine("I_S: len="+I_S.Length);
-			tmpb.setOffSet(17);
-			System.Console.WriteLine("kex: "+new String(tmpb.getString()));
-			System.Console.WriteLine("server_host_key: "+new String(tmpb.getString()));
-			System.Console.WriteLine("cipher.c2s: "+new String(tmpb.getString()));
-			System.Console.WriteLine("cipher.s2c: "+new String(tmpb.getString()));
-			System.Console.WriteLine("mac.c2s: "+new String(tmpb.getString()));
-			System.Console.WriteLine("mac.s2c: "+new String(tmpb.getString()));
-			System.Console.WriteLine("compression.c2s: "+new String(tmpb.getString()));
-			System.Console.WriteLine("compression.s2c: "+new String(tmpb.getString()));
-			System.Console.WriteLine("lang.c2s: "+new String(tmpb.getString()));
-			System.Console.WriteLine("lang.s2c: "+new String(tmpb.getString()));
-			System.Console.WriteLine("?: "+(tmpb.getByte()&0xff));
-			System.Console.WriteLine("??: "+tmpb.getInt());
-			}
-			catch(Exception e){
-			System.Console.WriteLine(e);
-			}
-			*/
+            Array.Copy(buf.buffer, buf.s, I_S, 0, I_S.Length);
 
             send_kexinit();
             String[] guess = KeyExchange.guess(I_S, I_C);
@@ -500,8 +461,8 @@ namespace Tamir.SharpSsh.jsch
             }
 
             if (!isAuthed &&
-                (guess[KeyExchange.PROPOSAL_ENC_ALGS_CTOS].equals("none") ||
-                (guess[KeyExchange.PROPOSAL_ENC_ALGS_STOC].equals("none"))))
+                (guess[KeyExchange.PROPOSAL_ENC_ALGS_CTOS].Equals("none") ||
+                 (guess[KeyExchange.PROPOSAL_ENC_ALGS_STOC].Equals("none"))))
             {
                 throw new JSchException("NONE Cipher should not be chosen before authentification is successed.");
             }
@@ -509,56 +470,47 @@ namespace Tamir.SharpSsh.jsch
             KeyExchange kex = null;
             try
             {
-                Class c = Class.forName(getConfig(guess[KeyExchange.PROPOSAL_KEX_ALGS]));
-                kex = (KeyExchange)(c.newInstance());
+                var c = Type.GetType(getConfig(guess[KeyExchange.PROPOSAL_KEX_ALGS]));
+                kex = (KeyExchange)Activator.CreateInstance(c);
             }
-            catch (Exception e) { System.Console.Error.WriteLine("kex: " + e); }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("kex: " + e);
+            }
             kex._guess = guess;
             kex.init(this, V_S, V_C, I_S, I_C);
             return kex;
         }
 
         private bool in_kex = false;
+
         public void rekey()
         {
             send_kexinit();
         }
+
         private void send_kexinit()
         {
             if (in_kex) return;
             in_kex = true;
 
-            // byte      SSH_MSG_KEXINIT(20)
-            // byte[16]  cookie (random bytes)
-            // String    kex_algorithms
-            // String    server_host_key_algorithms
-            // String    encryption_algorithms_client_to_server
-            // String    encryption_algorithms_server_to_client
-            // String    mac_algorithms_client_to_server
-            // String    mac_algorithms_server_to_client
-            // String    compression_algorithms_client_to_server
-            // String    compression_algorithms_server_to_client
-            // String    languages_client_to_server
-            // String    languages_server_to_client
             packet.reset();
             buf.putByte((byte)SSH_MSG_KEXINIT);
-
-            if (random == null) random = new jce.Random();
-
             lock (random)
             {
-                random.fill(buf.buffer, buf.index, 16); buf.skip(16);
+                random.fill(buf.buffer, buf.index, 16);
+                buf.skip(16);
             }
-            buf.putString(getConfig("kex").getBytes());
-            buf.putString(getConfig("server_host_key").getBytes());
-            buf.putString(getConfig("cipher.c2s").getBytes());
-            buf.putString(getConfig("cipher.s2c").getBytes());
-            buf.putString(getConfig("mac.c2s").getBytes());
-            buf.putString(getConfig("mac.s2c").getBytes());
-            buf.putString(getConfig("compression.c2s").getBytes());
-            buf.putString(getConfig("compression.s2c").getBytes());
-            buf.putString(getConfig("lang.c2s").getBytes());
-            buf.putString(getConfig("lang.s2c").getBytes());
+            buf.putString(getConfig("kex").GetBytes());
+            buf.putString(getConfig("server_host_key").GetBytes());
+            buf.putString(getConfig("cipher.c2s").GetBytes());
+            buf.putString(getConfig("cipher.s2c").GetBytes());
+            buf.putString(getConfig("mac.c2s").GetBytes());
+            buf.putString(getConfig("mac.s2c").GetBytes());
+            buf.putString(getConfig("compression.c2s").GetBytes());
+            buf.putString(getConfig("compression.s2c").GetBytes());
+            buf.putString(getConfig("lang.c2s").GetBytes());
+            buf.putString(getConfig("lang.s2c").GetBytes());
             buf.putByte((byte)0);
             buf.putInt(0);
 
@@ -581,8 +533,6 @@ namespace Tamir.SharpSsh.jsch
         {
             String shkc = getConfig("StrictHostKeyChecking");
 
-            //System.Console.WriteLine("shkc: "+shkc);
-
             byte[] K_S = kex.getHostKey();
             String key_type = kex.getKeyType();
             String key_fprint = kex.getFingerPrint();
@@ -598,7 +548,7 @@ namespace Tamir.SharpSsh.jsch
 
             bool insert = false;
 
-            if ((shkc.equals("ask") || shkc.equals("yes")) &&
+            if ((shkc.Equals("ask") || shkc.Equals("yes")) &&
                 i == HostKeyRepository.CHANGED)
             {
                 String file = null;
@@ -606,7 +556,10 @@ namespace Tamir.SharpSsh.jsch
                 {
                     file = hkr.getKnownHostsRepositoryID();
                 }
-                if (file == null) { file = "known_hosts"; }
+                if (file == null)
+                {
+                    file = "known_hosts";
+                }
                 String message =
                     "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!\n" +
                     "IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!\n" +
@@ -619,39 +572,36 @@ namespace Tamir.SharpSsh.jsch
 
                 bool b = false;
 
-                if (userinfo != null)
+                if (shkc.Equals("ask") && userinfo != null)
                 {
-                    //userinfo.showMessage(message);
                     b = userinfo.promptYesNo(message +
-                        "\nDo you want to delete the old key and insert the new key?");
+                                             "\nDo you want to delete the old key and insert the new key?");
                 }
-                //throw new JSchException("HostKey has been changed: "+host);
+
                 if (!b)
                 {
-                    throw new JSchException("HostKey has been changed: " + host);
+                    throw new JSchException("HostKey has been changed for host '" + host + "', new fingerprint is '" + key_fprint + "'");
                 }
                 else
                 {
                     lock (hkr)
                     {
                         hkr.remove(host,
-                                  (key_type.equals("DSA") ? "ssh-dss" : "ssh-rsa"),
+                                   (key_type.Equals("DSA") ? "ssh-dss" : "ssh-rsa"),
                                    null);
                         insert = true;
                     }
                 }
             }
 
-            //    bool insert=false;
-
-            if ((shkc.equals("ask") || shkc.equals("yes")) &&
+            if ((shkc.Equals("ask") || shkc.Equals("yes")) &&
                 (i != HostKeyRepository.OK) && !insert)
             {
-                if (shkc.equals("yes"))
+                if (shkc.Equals("yes"))
                 {
                     throw new JSchException("reject HostKey: " + host);
                 }
-                //System.Console.WriteLine("finger-print: "+key_fprint);
+
                 if (userinfo != null)
                 {
                     bool foo = userinfo.promptYesNo(
@@ -673,7 +623,7 @@ namespace Tamir.SharpSsh.jsch
                 }
             }
 
-            if (shkc.equals("no") &&
+            if (shkc.Equals("no") &&
                 HostKeyRepository.NOT_INCLUDED == i)
             {
                 insert = true;
@@ -686,10 +636,7 @@ namespace Tamir.SharpSsh.jsch
                     hkr.add(host, K_S, userinfo);
                 }
             }
-
         }
-
-        //public void start(){ (new Thread(this)).start();  }
 
         public Channel openChannel(String type)
         {
@@ -706,7 +653,7 @@ namespace Tamir.SharpSsh.jsch
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e);
+                Console.WriteLine(e);
             }
             return null;
         }
@@ -714,15 +661,10 @@ namespace Tamir.SharpSsh.jsch
         // encode will bin invoked in write with synchronization.
         public void encode(Packet packet)
         {
-            //System.Console.WriteLine("encode: "+packet.buffer.buffer[5]);
-            //System.Console.WriteLine("        "+packet.buffer.index);
-            //if(packet.buffer.buffer[5]==96){
-            //Thread.dumpStack();
-            //}
             if (deflater != null)
             {
                 packet.buffer.index = deflater.compress(packet.buffer.buffer,
-                    5, packet.buffer.index);
+                                                        5, packet.buffer.index);
             }
             if (c2scipher != null)
             {
@@ -755,24 +697,23 @@ namespace Tamir.SharpSsh.jsch
             }
         }
 
-        int[] uncompress_len = new int[1];
+        private int[] uncompress_len = new int[1];
 
         private int cipher_size = 8;
+
         public Buffer read(Buffer buf)
         {
             int j = 0;
             while (true)
             {
                 buf.reset();
-                io.getByte(buf.buffer, buf.index, cipher_size); buf.index += cipher_size;
+                io.getByte(buf.buffer, buf.index, cipher_size);
+                buf.index += cipher_size;
                 if (s2ccipher != null)
                 {
                     s2ccipher.update(buf.buffer, 0, cipher_size, buf.buffer, 0);
                 }
-                //				j=((buf.buffer[0]<<24)&0xff000000)|
-                //					((buf.buffer[1]<<16)&0x00ff0000)|
-                //					((buf.buffer[2]<< 8)&0x0000ff00)|
-                //					((buf.buffer[3]    )&0x000000ff);
+
                 j = Util.ToInt32(buf.buffer, 0);
                 j = j - 4 - cipher_size + 8;
                 if (j < 0 || (buf.index + j) > buf.buffer.Length)
@@ -781,7 +722,8 @@ namespace Tamir.SharpSsh.jsch
                 }
                 if (j > 0)
                 {
-                    io.getByte(buf.buffer, buf.index, j); buf.index += (j);
+                    io.getByte(buf.buffer, buf.index, j);
+                    buf.index += (j);
                     if (s2ccipher != null)
                     {
                         s2ccipher.update(buf.buffer, cipher_size, j, buf.buffer, cipher_size);
@@ -794,9 +736,15 @@ namespace Tamir.SharpSsh.jsch
                     s2cmac.update(buf.buffer, 0, buf.index);
                     byte[] result = s2cmac.doFinal();
                     io.getByte(mac_buf, 0, mac_buf.Length);
-                    if (!Arrays.equals(result, mac_buf))
+
+                    if (result.Length != mac_buf.Length) throw new IOException("MAC Error");
+
+                    for (int i = 0; i < result.Length; i++)
                     {
-                        throw new IOException("MAC Error");
+                        if (result[i] != mac_buf[i])
+                        {
+                            throw new IOException("MAC Error");
+                        }
                     }
                 }
                 seqi++;
@@ -814,7 +762,7 @@ namespace Tamir.SharpSsh.jsch
                     }
                     else
                     {
-                        System.Console.Error.WriteLine("fail in inflater");
+                        Console.Error.WriteLine("fail in inflater");
                         break;
                     }
                 }
@@ -824,7 +772,8 @@ namespace Tamir.SharpSsh.jsch
                 if (type == SSH_MSG_DISCONNECT)
                 {
                     buf.rewind();
-                    buf.getInt(); buf.getShort();
+                    buf.getInt();
+                    buf.getShort();
                     int reason_code = buf.getInt();
                     byte[] description = buf.getString();
                     byte[] language_tag = buf.getString();
@@ -835,9 +784,9 @@ namespace Tamir.SharpSsh.jsch
 								   " "+new String(language_tag));
 					*/
                     throw new JSchException("SSH_MSG_DISCONNECT:" +
-                        " " + reason_code +
-                        " " + new String(description) +
-                        " " + new String(language_tag));
+                                            " " + reason_code +
+                                            " " + new JavaString(description) +
+                                            " " + new JavaString(language_tag));
                     //break;
                 }
                 else if (type == SSH_MSG_IGNORE)
@@ -846,20 +795,14 @@ namespace Tamir.SharpSsh.jsch
                 else if (type == SSH_MSG_DEBUG)
                 {
                     buf.rewind();
-                    buf.getInt(); buf.getShort();
-                    /*
-						byte always_display=(byte)buf.getByte();
-						byte[] message=buf.getString();
-						byte[] language_tag=buf.getString();
-						System.Console.Error.WriteLine("SSH_MSG_DEBUG:"+
-								   " "+new String(message)+
-								   " "+new String(language_tag));
-					*/
+                    buf.getInt();
+                    buf.getShort();
                 }
                 else if (type == SSH_MSG_CHANNEL_WINDOW_ADJUST)
                 {
                     buf.rewind();
-                    buf.getInt(); buf.getShort();
+                    buf.getInt();
+                    buf.getShort();
                     Channel c = Channel.getChannel(buf.getInt(), this);
                     if (c == null)
                     {
@@ -885,10 +828,10 @@ namespace Tamir.SharpSsh.jsch
 
         private void receive_newkeys(Buffer buf, KeyExchange kex)
         {
-            //    send_newkeys();
             updateKeys(kex);
             in_kex = false;
         }
+
         private void updateKeys(KeyExchange kex)
         {
             byte[] K = kex.getK();
@@ -900,7 +843,7 @@ namespace Tamir.SharpSsh.jsch
             if (session_id == null)
             {
                 session_id = new byte[H.Length];
-                Tamir.SharpSsh.java.System.arraycopy(H, 0, session_id, 0, H.Length);
+                Array.Copy(H, 0, session_id, 0, H.Length);
             }
 
             /*
@@ -944,10 +887,8 @@ namespace Tamir.SharpSsh.jsch
 
             try
             {
-                Class c;
-
-                c = Class.forName(getConfig(guess[KeyExchange.PROPOSAL_ENC_ALGS_STOC]));
-                s2ccipher = (Cipher)(c.newInstance());
+                var c = Type.GetType(getConfig(guess[KeyExchange.PROPOSAL_ENC_ALGS_STOC]));
+                s2ccipher = (Cipher)(Activator.CreateInstance(c));
                 while (s2ccipher.getBlockSize() > Es2c.Length)
                 {
                     buf.reset();
@@ -957,19 +898,19 @@ namespace Tamir.SharpSsh.jsch
                     hash.update(buf.buffer, 0, buf.index);
                     byte[] foo = hash.digest();
                     byte[] bar = new byte[Es2c.Length + foo.Length];
-                    Tamir.SharpSsh.java.System.arraycopy(Es2c, 0, bar, 0, Es2c.Length);
-                    Tamir.SharpSsh.java.System.arraycopy(foo, 0, bar, Es2c.Length, foo.Length);
+                    Array.Copy(Es2c, 0, bar, 0, Es2c.Length);
+                    Array.Copy(foo, 0, bar, Es2c.Length, foo.Length);
                     Es2c = bar;
                 }
                 s2ccipher.init(Cipher.DECRYPT_MODE, Es2c, IVs2c);
                 cipher_size = s2ccipher.getIVSize();
-                c = Class.forName(getConfig(guess[KeyExchange.PROPOSAL_MAC_ALGS_STOC]));
-                s2cmac = (MAC)(c.newInstance());
+                c = Type.GetType(getConfig(guess[KeyExchange.PROPOSAL_MAC_ALGS_STOC]));
+                s2cmac = (MAC)(Activator.CreateInstance(c));
                 s2cmac.init(MACs2c);
                 mac_buf = new byte[s2cmac.getBlockSize()];
 
-                c = Class.forName(getConfig(guess[KeyExchange.PROPOSAL_ENC_ALGS_CTOS]));
-                c2scipher = (Cipher)(c.newInstance());
+                c = Type.GetType(getConfig(guess[KeyExchange.PROPOSAL_ENC_ALGS_CTOS]));
+                c2scipher = (Cipher)(Activator.CreateInstance(c));
                 while (c2scipher.getBlockSize() > Ec2s.Length)
                 {
                     buf.reset();
@@ -979,34 +920,36 @@ namespace Tamir.SharpSsh.jsch
                     hash.update(buf.buffer, 0, buf.index);
                     byte[] foo = hash.digest();
                     byte[] bar = new byte[Ec2s.Length + foo.Length];
-                    Tamir.SharpSsh.java.System.arraycopy(Ec2s, 0, bar, 0, Ec2s.Length);
-                    Tamir.SharpSsh.java.System.arraycopy(foo, 0, bar, Ec2s.Length, foo.Length);
+                    Array.Copy(Ec2s, 0, bar, 0, Ec2s.Length);
+                    Array.Copy(foo, 0, bar, Ec2s.Length, foo.Length);
                     Ec2s = bar;
                 }
                 c2scipher.init(Cipher.ENCRYPT_MODE, Ec2s, IVc2s);
 
-                c = Class.forName(getConfig(guess[KeyExchange.PROPOSAL_MAC_ALGS_CTOS]));
-                c2smac = (MAC)(c.newInstance());
+                c = Type.GetType(getConfig(guess[KeyExchange.PROPOSAL_MAC_ALGS_CTOS]));
+                c2smac = (MAC)(Activator.CreateInstance(c));
                 c2smac.init(MACc2s);
 
-                if (!guess[KeyExchange.PROPOSAL_COMP_ALGS_CTOS].equals("none"))
+                if (!guess[KeyExchange.PROPOSAL_COMP_ALGS_CTOS].Equals("none"))
                 {
                     String foo = getConfig(guess[KeyExchange.PROPOSAL_COMP_ALGS_CTOS]);
                     if (foo != null)
                     {
                         try
                         {
-                            c = Class.forName(foo);
-                            deflater = (Compression)(c.newInstance());
+                            c = Type.GetType(foo);
+                            deflater = (Compression)(Activator.CreateInstance(c));
                             int level = 6;
-                            try { level = Integer.parseInt(getConfig("compression_level")); }
+                            try
+                            {
+                                level = Int32.Parse(getConfig("compression_level"));
+                            }
                             catch (Exception) { }
-
                             deflater.init(Compression.DEFLATER, level);
                         }
                         catch (Exception)
                         {
-                            System.Console.Error.WriteLine(foo + " isn't accessible.");
+                            Console.Error.WriteLine(foo + " isn't accessible.");
                         }
                     }
                 }
@@ -1017,20 +960,20 @@ namespace Tamir.SharpSsh.jsch
                         deflater = null;
                     }
                 }
-                if (!guess[KeyExchange.PROPOSAL_COMP_ALGS_STOC].equals("none"))
+                if (!guess[KeyExchange.PROPOSAL_COMP_ALGS_STOC].Equals("none"))
                 {
                     String foo = getConfig(guess[KeyExchange.PROPOSAL_COMP_ALGS_STOC]);
                     if (foo != null)
                     {
                         try
                         {
-                            c = Class.forName(foo);
-                            inflater = (Compression)(c.newInstance());
+                            c = Type.GetType(foo);
+                            inflater = (Compression)(Activator.CreateInstance(c));
                             inflater.init(Compression.INFLATER, 0);
                         }
                         catch (Exception)
                         {
-                            System.Console.Error.WriteLine(foo + " isn't accessible.");
+                            Console.Error.WriteLine(foo + " isn't accessible.");
                         }
                     }
                 }
@@ -1042,7 +985,10 @@ namespace Tamir.SharpSsh.jsch
                     }
                 }
             }
-            catch (Exception e) { System.Console.Error.WriteLine("updatekeys: " + e); }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("updatekeys: " + e);
+            }
         }
 
         public void write(Packet packet, Channel c, int length)
@@ -1051,9 +997,11 @@ namespace Tamir.SharpSsh.jsch
             {
                 if (in_kex)
                 {
-                    try { Thread.Sleep(10); }
+                    try
+                    {
+                        Thread.Sleep(10);
+                    }
                     catch (ThreadInterruptedException) { }
-
                     continue;
                 }
                 lock (c)
@@ -1111,27 +1059,21 @@ namespace Tamir.SharpSsh.jsch
                     }
                 }
 
-                try { Thread.Sleep(100); }
-                catch (ThreadInterruptedException) { };
+                try
+                {
+                    Thread.Sleep(100);
+                }
+                catch (ThreadInterruptedException) { }
             }
             _write(packet);
         }
-        /*
-		public lockpublic void write(Packet packet) {
-		   encode(packet);
-		   if(io!=null){
-			 io.put(packet);
-			 seqo++;
-		   }
-		}
-		*/
+
         public void write(Packet packet)
         {
-            // System.Console.WriteLine("in_kex="+in_kex+" "+(packet.buffer.buffer[5]));
             while (in_kex)
             {
                 byte command = packet.buffer.buffer[5];
-                //System.Console.WriteLine("command: "+command);
+
                 if (command == SSH_MSG_KEXINIT ||
                     command == SSH_MSG_NEWKEYS ||
                     command == SSH_MSG_KEXDH_INIT ||
@@ -1144,12 +1086,16 @@ namespace Tamir.SharpSsh.jsch
                 {
                     break;
                 }
-                try { Thread.Sleep(10); }
-                catch (ThreadInterruptedException) { };
+                try
+                {
+                    Thread.Sleep(10);
+                }
+                catch (ThreadInterruptedException) { }
             }
             _write(packet);
         }
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.Synchronized)]
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
         private void _write(Packet packet)
         {
             encode(packet);
@@ -1160,7 +1106,8 @@ namespace Tamir.SharpSsh.jsch
             }
         }
 
-        Runnable thread;
+        private JavaRunnable thread;
+
         public void run()
         {
             thread = this;
@@ -1177,12 +1124,10 @@ namespace Tamir.SharpSsh.jsch
             try
             {
                 while (_isConnected &&
-                    thread != null)
+                       thread != null)
                 {
                     buf = read(buf);
                     int msgType = buf.buffer[5] & 0xff;
-                    //      if(msgType!=94)
-                    //System.Console.WriteLine("read: 94 ? "+msgType);
 
                     if (kex != null && kex.getState() == msgType)
                     {
@@ -1226,7 +1171,10 @@ namespace Tamir.SharpSsh.jsch
                             catch (Exception)
                             {
                                 //System.Console.WriteLine(e);
-                                try { channel.disconnect(); }
+                                try
+                                {
+                                    channel.disconnect();
+                                }
                                 catch (Exception) { }
                                 break;
                             }
@@ -1248,7 +1196,7 @@ namespace Tamir.SharpSsh.jsch
                             buf.getShort();
                             i = buf.getInt();
                             channel = Channel.getChannel(i, this);
-                            buf.getInt();                   // data_type_code == 1
+                            buf.getInt(); // data_type_code == 1
                             foo = buf.getString(start, length);
                             //System.Console.WriteLine("stderr: "+new String(foo,start[0],length[0]));
                             if (channel == null)
@@ -1312,7 +1260,7 @@ namespace Tamir.SharpSsh.jsch
                                 channel.disconnect();
                             }
                             /*
-								if(Channel.pool.size()==0){
+								if(Channel.pool.Count==0){
 							  thread=null;
 							}
 							*/
@@ -1357,9 +1305,9 @@ namespace Tamir.SharpSsh.jsch
                             if (channel != null)
                             {
                                 byte reply_type = (byte)SSH_MSG_CHANNEL_FAILURE;
-                                if ((new String(foo)).equals("exit-status"))
+                                if ((new JavaString(foo)).Equals("exit-status"))
                                 {
-                                    i = buf.getInt();             // exit-status
+                                    i = buf.getInt(); // exit-status
                                     channel.setExitStatus(i);
                                     //	    System.Console.WriteLine("exit-stauts: "+i);
                                     //          channel.close();
@@ -1381,12 +1329,12 @@ namespace Tamir.SharpSsh.jsch
                             buf.getInt();
                             buf.getShort();
                             foo = buf.getString();
-                            String ctyp = new String(foo);
+                            JavaString ctyp = new JavaString(foo);
                             //System.Console.WriteLine("type="+ctyp);
-                            if (!new String("forwarded-tcpip").equals(ctyp) &&
-                                !(new String("x11").equals(ctyp) && x11_forwarding))
+                            if (!new JavaString("forwarded-tcpip").Equals(ctyp) &&
+                                !(new JavaString("x11").Equals(ctyp) && x11_forwarding))
                             {
-                                System.Console.WriteLine("Session.run: CHANNEL OPEN " + ctyp);
+                                Console.WriteLine("Session.run: CHANNEL OPEN " + ctyp);
                                 throw new IOException("Session.run: CHANNEL OPEN " + ctyp);
                             }
                             else
@@ -1403,9 +1351,9 @@ namespace Tamir.SharpSsh.jsch
                                 buf.putInt(channel.lwsize);
                                 buf.putInt(channel.lmpsize);
                                 write(packet);
-                                Thread tmp = new Thread(channel);
-                                tmp.setName("Channel " + ctyp + " " + host);
-                                tmp.start();
+                                JavaThread tmp = new JavaThread(channel);
+                                tmp.Name("Channel " + ctyp + " " + host);
+                                tmp.Start();
                                 break;
                             }
                         case SSH_MSG_CHANNEL_SUCCESS:
@@ -1433,7 +1381,7 @@ namespace Tamir.SharpSsh.jsch
                         case SSH_MSG_GLOBAL_REQUEST:
                             buf.getInt();
                             buf.getShort();
-                            foo = buf.getString();       // request name
+                            foo = buf.getString(); // request name
                             reply = (buf.getByte() != 0);
                             if (reply)
                             {
@@ -1444,20 +1392,20 @@ namespace Tamir.SharpSsh.jsch
                             break;
                         case SSH_MSG_REQUEST_FAILURE:
                         case SSH_MSG_REQUEST_SUCCESS:
-                            Thread t = grr.getThread();
+                            JavaThread t = grr.getThread();
                             if (t != null)
                             {
                                 grr.setReply(msgType == SSH_MSG_REQUEST_SUCCESS ? 1 : 0);
-                                t.interrupt();
+                                t.Interrupt();
                             }
                             break;
                         default:
-                            System.Console.WriteLine("Session.run: unsupported type " + msgType);
+                            Console.WriteLine("Session.run: unsupported type " + msgType);
                             throw new IOException("Unknown SSH message type " + msgType);
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //System.Console.WriteLine("# Session.run");
                 //e.printStackTrace();
@@ -1471,7 +1419,7 @@ namespace Tamir.SharpSsh.jsch
                 //System.Console.WriteLine("@1");
                 //e.printStackTrace();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //System.Console.WriteLine("@2");
                 //e.printStackTrace();
@@ -1493,12 +1441,12 @@ namespace Tamir.SharpSsh.jsch
             //System.Console.WriteLine(this+": disconnect");
             //Thread.dumpStack();
             /*
-			for(int i=0; i<Channel.pool.size(); i++){
+			for(int i=0; i<Channel.pool.Count; i++){
 			  try{
-				Channel c=((Channel)(Channel.pool.elementAt(i)));
+				Channel c=((Channel)(Channel.pool[i]));
 			if(c.session==this) c.eof();
 			  }
-			  catch(Exception e){
+			  catch(System.Exception e){
 			  }
 			}
 			*/
@@ -1512,8 +1460,7 @@ namespace Tamir.SharpSsh.jsch
 
             lock (connectThread)
             {
-                connectThread.yield();
-                connectThread.interrupt();
+                connectThread.Interrupt();
                 connectThread = null;
             }
             thread = null;
@@ -1528,18 +1475,18 @@ namespace Tamir.SharpSsh.jsch
                 if (proxy == null)
                 {
                     if (socket != null)
-                        socket.close();
+                        socket.Close();
                 }
                 else
                 {
                     lock (proxy)
                     {
-                        proxy.close();
+                        proxy.Close();
                     }
                     proxy = null;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //      e.printStackTrace();
             }
@@ -1554,49 +1501,56 @@ namespace Tamir.SharpSsh.jsch
             //System.gc();
         }
 
-        public void setPortForwardingL(int lport, String host, int rport)
+        public void setPortForwardingL(int lport, JavaString host, int rport)
         {
             setPortForwardingL("127.0.0.1", lport, host, rport);
         }
-        public void setPortForwardingL(String boundaddress, int lport, String host, int rport)
+
+        public void setPortForwardingL(JavaString boundaddress, int lport, JavaString host, int rport)
         {
             setPortForwardingL(boundaddress, lport, host, rport, null);
         }
-        public void setPortForwardingL(String boundaddress, int lport, String host, int rport, ServerSocketFactory ssf)
+
+        public void setPortForwardingL(JavaString boundaddress, int lport, JavaString host, int rport, ServerSocketFactory ssf)
         {
             PortWatcher pw = PortWatcher.addPort(this, boundaddress, lport, host, rport, ssf);
-            Thread tmp = new Thread(pw);
-            tmp.setName("PortWatcher Thread for " + host);
-            tmp.start();
+            JavaThread tmp = new JavaThread(pw);
+            tmp.Name("PortWatcher Thread for " + host);
+            tmp.Start();
         }
+
         public void delPortForwardingL(int lport)
         {
             delPortForwardingL("127.0.0.1", lport);
         }
-        public void delPortForwardingL(String boundaddress, int lport)
+
+        public void delPortForwardingL(JavaString boundaddress, int lport)
         {
             PortWatcher.delPort(this, boundaddress, lport);
         }
+
         public String[] getPortForwardingL()
         {
             return PortWatcher.getPortForwarding(this);
         }
 
-        public void setPortForwardingR(int rport, String host, int lport)
+        public void setPortForwardingR(int rport, JavaString host, int lport)
         {
             setPortForwardingR(rport, host, lport, (SocketFactory)null);
         }
-        public void setPortForwardingR(int rport, String host, int lport, SocketFactory sf)
+
+        public void setPortForwardingR(int rport, JavaString host, int lport, SocketFactory sf)
         {
             ChannelForwardedTCPIP.addPort(this, rport, host, lport, sf);
             setPortForwarding(rport);
         }
 
-        public void setPortForwardingR(int rport, String daemon)
+        public void setPortForwardingR(int rport, JavaString daemon)
         {
             setPortForwardingR(rport, daemon, null);
         }
-        public void setPortForwardingR(int rport, String daemon, System.Object[] arg)
+
+        public void setPortForwardingR(int rport, JavaString daemon, Object[] arg)
         {
             ChannelForwardedTCPIP.addPort(this, rport, daemon, arg);
             setPortForwarding(rport);
@@ -1604,18 +1558,33 @@ namespace Tamir.SharpSsh.jsch
 
         private class GlobalRequestReply
         {
-            private Thread thread = null;
+            private JavaThread thread = null;
             private int reply = -1;
-            internal void setThread(Thread thread)
+
+            internal void setThread(JavaThread thread)
             {
                 this.thread = thread;
                 this.reply = -1;
             }
-            internal Thread getThread() { return thread; }
-            internal void setReply(int reply) { this.reply = reply; }
-            internal int getReply() { return this.reply; }
+
+            internal JavaThread getThread()
+            {
+                return thread;
+            }
+
+            internal void setReply(int reply)
+            {
+                this.reply = reply;
+            }
+
+            internal int getReply()
+            {
+                return this.reply;
+            }
         }
+
         private GlobalRequestReply grr = new GlobalRequestReply();
+
         private void setPortForwarding(int rport)
         {
             lock (grr)
@@ -1632,10 +1601,10 @@ namespace Tamir.SharpSsh.jsch
                     // uint32  port number to bind
                     packet.reset();
                     buf.putByte((byte)SSH_MSG_GLOBAL_REQUEST);
-                    buf.putString(new String("tcpip-forward").getBytes());
+                    buf.putString(new JavaString("tcpip-forward").GetBytes());
                     //      buf.putByte((byte)0);
                     buf.putByte((byte)1);
-                    buf.putString(new String("0.0.0.0").getBytes());
+                    buf.putString(new JavaString("0.0.0.0").GetBytes());
                     buf.putInt(rport);
                     write(packet);
                 }
@@ -1644,9 +1613,12 @@ namespace Tamir.SharpSsh.jsch
                     throw new JSchException(e.ToString());
                 }
 
-                grr.setThread(Thread.currentThread());
-                try { Thread.Sleep(10000); }
-                catch (Exception)
+                grr.setThread(new JavaThread(Thread.CurrentThread));
+                try
+                {
+                    Thread.Sleep(10000);
+                }
+                catch (Exception e)
                 {
                 }
                 int reply = grr.getReply();
@@ -1657,6 +1629,7 @@ namespace Tamir.SharpSsh.jsch
                 }
             }
         }
+
         public void delPortForwardingR(int rport)
         {
             ChannelForwardedTCPIP.delPort(this, rport);
@@ -1666,50 +1639,98 @@ namespace Tamir.SharpSsh.jsch
         {
             channel.session = this;
         }
-        public String getConfig(object name)
+
+        public JavaString getConfig(object name)
         {
-            System.Object foo = null;
+            Object foo = null;
             if (config != null)
             {
-                foo = config.get(name);
-                if (foo is String) return (String)foo;
+                foo = config[name];
+                if (foo is JavaString) return (JavaString)foo;
                 if (foo is string) return (string)foo;
             }
             foo = jsch.getConfig(name.ToString());
             if (foo is string) return (string)foo;
-            if (foo is String) return (String)foo;
+            if (foo is JavaString) return (JavaString)foo;
             return null;
         }
-        //  public Channel getChannel(){ return channel; }
-        public void setProxy(Proxy proxy) { this.proxy = proxy; }
-        public void setHost(String host) { this.host = host; }
-        public void setPort(int port) { this.port = port; }
-        internal void setUserName(String foo) { this.username = foo; }
-        public void setPassword(String foo) { this.password = foo; }
-        public void setUserInfo(UserInfo userinfo) { this.userinfo = userinfo; }
-        public void setInputStream(Stream In) { this.In = In; }
-        public void setOutputStream(Stream Out) { this.Out = Out; }
-        public void setX11Host(String host) { ChannelX11.setHost(host); }
-        public void setX11Port(int port) { ChannelX11.setPort(port); }
-        public void setX11Cookie(String cookie) { ChannelX11.setCookie(cookie); }
 
-        public void setConfig(System.Collections.Hashtable foo)
+        //  public Channel getChannel(){ return channel; }
+        public void setProxy(IProxy proxy)
         {
-            setConfig(new Hashtable(foo));
+            this.proxy = proxy;
+        }
+
+        public void setHost(JavaString host)
+        {
+            this.host = host;
+        }
+
+        public void setPort(int port)
+        {
+            this.port = port;
+        }
+
+        internal void setUserName(JavaString foo)
+        {
+            this.username = foo;
+        }
+
+        public void setPassword(JavaString foo)
+        {
+            this.password = foo;
+        }
+
+        public void setUserInfo(UserInfo userinfo)
+        {
+            this.userinfo = userinfo;
+        }
+
+        public void setInputStream(Stream In)
+        {
+            this.In = In;
+        }
+
+        public void setOutputStream(Stream Out)
+        {
+            this.Out = Out;
+        }
+
+        public void setX11Host(JavaString host)
+        {
+            ChannelX11.setHost(host);
+        }
+
+        public void setX11Port(int port)
+        {
+            ChannelX11.setPort(port);
+        }
+
+        public void setX11Cookie(JavaString cookie)
+        {
+            ChannelX11.setCookie(cookie);
         }
 
         public void setConfig(Hashtable foo)
         {
-            if (config == null) config = new Hashtable();
-            for (Enumeration e = foo.keys(); e.hasMoreElements();)
-            {
-                object key = e.nextElement();
-                config.put(key, (foo.get(key)));
-            }
+            this.config = foo;
         }
-        public void setSocketFactory(SocketFactory foo) { socket_factory = foo; }
-        public bool isConnected() { return _isConnected; }
-        public int getTimeout() { return timeout; }
+
+        public void setSocketFactory(SocketFactory foo)
+        {
+            socket_factory = foo;
+        }
+
+        public bool isConnected()
+        {
+            return _isConnected;
+        }
+
+        public int getTimeout()
+        {
+            return timeout;
+        }
+
         public void setTimeout(int foo)
         {
             if (socket == null)
@@ -1731,17 +1752,20 @@ namespace Tamir.SharpSsh.jsch
                 throw new JSchException(e.ToString());
             }
         }
-        public String getServerVersion()
+
+        public JavaString getServerVersion()
         {
-            return new String(V_S);
+            return new JavaString(V_S);
         }
-        public String getClientVersion()
+
+        public JavaString getClientVersion()
         {
-            return new String(V_C);
+            return new JavaString(V_C);
         }
-        public void setClientVersion(String cv)
+
+        public void setClientVersion(JavaString cv)
         {
-            V_C = cv.getBytes();
+            V_C = cv.GetBytes();
         }
 
         public void sendIgnore()
@@ -1753,7 +1777,8 @@ namespace Tamir.SharpSsh.jsch
             write(packet);
         }
 
-        private static byte[] keepalivemsg = new String("keepalive@jcraft.com").getBytes();
+        private static byte[] keepalivemsg = "keepalive@jcraft.com".GetBytes();
+
         public void sendKeepAliveMsg()
         {
             Buffer buf = new Buffer();
@@ -1766,10 +1791,26 @@ namespace Tamir.SharpSsh.jsch
         }
 
         private HostKey hostkey = null;
-        public HostKey getHostKey() { return hostkey; }
-        public String getHost() { return host; }
-        public String getUserName() { return username; }
-        public int getPort() { return port; }
+
+        public HostKey getHostKey()
+        {
+            return hostkey;
+        }
+
+        public String getHost()
+        {
+            return host;
+        }
+
+        public String getUserName()
+        {
+            return username;
+        }
+
+        public int getPort()
+        {
+            return port;
+        }
 
         public String getMac()
         {
@@ -1777,8 +1818,8 @@ namespace Tamir.SharpSsh.jsch
             if (s2cmac != null)
                 mac = s2cmac.getName();
             return mac;
-
         }
+
         public String getCipher()
         {
             String cipher = "";
@@ -1791,6 +1832,10 @@ namespace Tamir.SharpSsh.jsch
         {
             get { return this.buf.buffer.Length; }
         }
-    }
 
+        public IProxy GetProxy()
+        {
+            return this.proxy;
+        }
+    }
 }

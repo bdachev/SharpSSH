@@ -1,6 +1,4 @@
 using System;
-//using System.Net;
-//using System.Net.Sockets;
 using System.IO;
 using Tamir.SharpSsh.java.lang;
 
@@ -37,10 +35,9 @@ namespace Tamir.SharpSsh.jsch
 
     public class ChannelExec : ChannelSession
     {
-        bool xforwading = false;
-        bool pty = false;
-        String command = "";
-
+        private bool xforwading = false;
+        private bool pty = false;
+        private String command = "";
         /*
 		ChannelExec(){
 		  super();
@@ -49,8 +46,16 @@ namespace Tamir.SharpSsh.jsch
 		}
 		*/
 
-        public override void setXForwarding(bool foo) { xforwading = foo; }
-        public void setPty(bool foo) { pty = foo; }
+        public override void setXForwarding(bool foo)
+        {
+            xforwading = foo;
+        }
+
+        public void setPty(bool foo)
+        {
+            pty = foo;
+        }
+
         public override void start()
         {
             try
@@ -72,29 +77,35 @@ namespace Tamir.SharpSsh.jsch
                 request = new RequestExec(command);
                 request.request(session, this);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 throw new JSchException("ChannelExec");
             }
-            thread = new Thread(this);
-            thread.setName("Exec thread " + session.getHost());
-            thread.start();
+            thread = new JavaThread(this);
+            thread.Name("Exec thread " + session.getHost());
+            thread.Start();
         }
-        public void setCommand(String foo) { command = foo; }
+
+        public void setCommand(String foo)
+        {
+            command = foo;
+        }
+
         public override void init()
         {
             io.setInputStream(session.In);
             io.setOutputStream(session.Out);
         }
+
         //public void finalize() throws java.lang.Throwable{ super.finalize(); }
         public void setErrStream(Stream Out)
         {
             setExtOutputStream(Out);
         }
+
         public Stream getErrStream()
         {
             return getExtInputStream();
         }
     }
-
 }
