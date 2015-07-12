@@ -84,13 +84,10 @@ namespace UnitTestSSH
         {
             SshConnectionInfo input = UserInput;
 
-            // SshExec exec = new SshExec(input.Host, input.User);
-
             SshExec exec = new SshExec(input.Host, input.User);
-
             if (input.Pass != null)
                 exec.Password = input.Pass;
-            //if(input.IdentityFile != null) exec.AddIdentityFile( input.IdentityFile );
+            // if(input.IdentityFile != null) exec.AddIdentityFile( input.IdentityFile );
 
             Console.Write("Connecting...");
             exec.Connect();
@@ -100,13 +97,9 @@ namespace UnitTestSSH
             {
                 Console.Write("Enter a command to execute ['Enter' to cancel]: ");
                 string command = "ls";
-                // command = Console.ReadLine();
-                // if (command == "") break;
 
                 Console.WriteLine(command);
 
-                string output = string.Empty;
-                // output = exec.RunCommand(command);
                 var outputEnum = exec.RunCommandEx(command, false); // .RunCommand(command);
                 while (outputEnum.MoveNext())
                     Console.WriteLine(outputEnum.Current);
