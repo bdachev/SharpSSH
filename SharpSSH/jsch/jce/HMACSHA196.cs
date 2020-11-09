@@ -33,59 +33,17 @@ namespace Tamir.SharpSsh.jsch.jce
     EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     */
 
-    public class HMACSHA196 : MAC
+    public class HMACSHA196 : HMACSHA1
     {
-        private const String name = "hmac-sha1-96";
-        private const int bsize = 12;
-        private HMAC mentalis_mac;
-        private CryptoStream cs;
-        private byte[] buf = new byte[12];
-        private byte[] tmp = new byte[4];
-
-        public int getBlockSize()
+        public override String getName() { return "hmac-sha1-96"; }
+        public override int getBlockSize() { return 12; }
+        public override byte[] doFinal()
         {
-            return bsize;
-        }
-
-        public void init(byte[] key)
-        {
-            if (key.Length > 20)
-            {
-                byte[] tmp = new byte[20];
-                Array.Copy(key, 0, tmp, 0, 20);
-                key = tmp;
-            }
-
-            mentalis_mac = new System.Security.Cryptography.HMACSHA1(key);
-            cs = new CryptoStream(Stream.Null, mentalis_mac, CryptoStreamMode.Write);
-        }
-
-        public void update(int i)
-        {
-            tmp[0] = (byte) (i >> 24);
-            tmp[1] = (byte) (i >> 16);
-            tmp[2] = (byte) (i >> 8);
-            tmp[3] = (byte) i;
-            update(tmp, 0, 4);
-        }
-
-        public void update(byte[] foo, int s, int l)
-        {
-            cs.Write(foo, s, l);
-        }
-
-        public byte[] doFinal()
-        {
-            cs.Close();
-
-            Array.Copy(mentalis_mac.Hash, 0, buf, 0, 12);
-
+            var res = base.doFinal();
+            byte[] buf = new byte[12];
+            Array.Copy(res, 0, buf, 0, 12);
             return buf;
         }
-
-        public String getName()
-        {
-            return name;
-        }
     }
+
 }

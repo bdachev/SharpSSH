@@ -35,20 +35,12 @@ namespace Tamir.SharpSsh.jsch.jce
     public class AES128CBC : Cipher
     {
         private int mode;
-        private const int ivsize = 16;
-        private const int bsize = 16;
         private RijndaelManaged rijndael;
         private ICryptoTransform cipher;
 
-        public override int getIVSize()
-        {
-            return ivsize;
-        }
+        public override int getIVSize() { return 16; }
 
-        public override int getBlockSize()
-        {
-            return bsize;
-        }
+        public override int getBlockSize() { return 16; }
 
         public override void init(int mode, byte[] key, byte[] iv)
         {
@@ -58,12 +50,14 @@ namespace Tamir.SharpSsh.jsch.jce
             rijndael.Padding = PaddingMode.None;
             //String pad="NoPadding";      
             byte[] tmp;
+            int ivsize = getIVSize();
             if (iv.Length > ivsize)
             {
                 tmp = new byte[ivsize];
                 Array.Copy(iv, 0, tmp, 0, tmp.Length);
                 iv = tmp;
             }
+            int bsize = getBlockSize();
             if (key.Length > bsize)
             {
                 tmp = new byte[bsize];

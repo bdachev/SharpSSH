@@ -36,9 +36,13 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     public class SHA1 : HASH
     {
         //MessageDigest md;
-        internal SHA1CryptoServiceProvider md;
+        internal HashAlgorithm md;
         private CryptoStream cs;
 
+        protected virtual System.Security.Cryptography.HashAlgorithm createHash()
+        {
+	        return new System.Security.Cryptography.SHA1CryptoServiceProvider();
+        }
         public override int getBlockSize()
         {
             return 20;
@@ -49,7 +53,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             try
             {
                 //md=MessageDigest.getInstance("SHA-1");
-                md = new SHA1CryptoServiceProvider();
+                md = new createHash();
                 cs = new CryptoStream(Stream.Null, md, CryptoStreamMode.Write);
             }
             catch (Exception e)

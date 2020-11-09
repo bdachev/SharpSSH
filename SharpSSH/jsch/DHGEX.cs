@@ -41,8 +41,8 @@ namespace Tamir.SharpSsh.jsch
         internal static int min = 1024;
 
         //  static int min=512;
-        internal static int preferred = 1024;
-        internal static int max = 1024;
+        internal static int preferred = 2048;
+        internal static int max = 8096;
 
         //  static int preferred=1024;
         //  static int max=2000;
@@ -69,6 +69,8 @@ namespace Tamir.SharpSsh.jsch
         private byte[] e;
         //private byte[] f;
 
+        protected string hash = "sha-1";
+
         public override void init(Session session,
                                   byte[] V_S, byte[] V_C, byte[] I_S, byte[] I_C)
         {
@@ -83,7 +85,7 @@ namespace Tamir.SharpSsh.jsch
 
             try
             {
-                Type t = Type.GetType(session.getConfig("sha-1"));
+                Type t = Type.GetType(session.getConfig(hash));
                 sha = (HASH) (Activator.CreateInstance(t));
                 sha.init();
             }

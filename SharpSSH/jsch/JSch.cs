@@ -41,13 +41,13 @@ namespace Tamir.SharpSsh.jsch
         {
             config = new Hashtable();
 
-            config.Add("kex", "diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1");
+            config.Add("kex", "diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256");
             config.Add("server_host_key", "ssh-rsa,ssh-dss");
 
-            config.Add("cipher.s2c", "3des-cbc,aes128-cbc");
-            config.Add("cipher.c2s", "3des-cbc,aes128-cbc");
-            config.Add("mac.s2c", "hmac-md5,hmac-sha1");
-            config.Add("mac.c2s", "hmac-md5,hmac-sha1");
+            config.Add("cipher.s2c", "aes128-ctr,aes128-cbc,3des-cbc,aes192-ctr,aes192-cbc,aes256-ctr,aes256-cbc");
+            config.Add("cipher.c2s", "aes128-ctr,aes128-cbc,3des-cbc,aes192-ctr,aes192-cbc,aes256-ctr,aes256-cbc");
+            config.Add("mac.s2c", "hmac-md5,hmac-sha1,hmac-sha2-256,hmac-sha1-96,hmac-md5-96");
+            config.Add("mac.c2s", "hmac-md5,hmac-sha1,hmac-sha2-256,hmac-sha1-96,hmac-md5-96");
             config.Add("compression.s2c", "none");
             config.Add("compression.c2s", "none");
             config.Add("lang.s2c", "");
@@ -55,6 +55,7 @@ namespace Tamir.SharpSsh.jsch
 
             config.Add("diffie-hellman-group-exchange-sha1", "Tamir.SharpSsh.jsch.DHGEX");
             config.Add("diffie-hellman-group1-sha1", "Tamir.SharpSsh.jsch.DHG1");
+            config.Add("diffie-hellman-group-exchange-sha256", "Tamir.SharpSsh.jsch.DHGEX256");
 
             config.Add("dh", "Tamir.SharpSsh.jsch.jce.DH");
             config.Add("3des-cbc", "Tamir.SharpSsh.jsch.jce.TripleDESCBC");
@@ -62,7 +63,12 @@ namespace Tamir.SharpSsh.jsch
             config.Add("hmac-sha1-96", "Tamir.SharpSsh.jsch.jce.HMACSHA196");
             config.Add("hmac-md5", "Tamir.SharpSsh.jsch.jce.HMACMD5");
             config.Add("hmac-md5-96", "Tamir.SharpSsh.jsch.jce.HMACMD596");
+            config.Add("hmac-sha2-256", "Tamir.SharpSsh.jsch.jce.HMACSHA256");
+            config.Add("hmac-sha2-512", "Tamir.SharpSsh.jsch.jce.HMACSHA512");
             config.Add("sha-1", "Tamir.SharpSsh.jsch.jce.SHA1");
+            config.Add("sha-256", "Tamir.SharpSsh.jsch.jce.SHA256");
+            config.Add("sha-384", "Tamir.SharpSsh.jsch.jce.SHA384");
+            config.Add("sha-512", "Tamir.SharpSsh.jsch.jce.SHA512");
             config.Add("md5", "Tamir.SharpSsh.jsch.jce.MD5");
             config.Add("signature.dss", "Tamir.SharpSsh.jsch.jce.SignatureDSA");
             config.Add("signature.rsa", "Tamir.SharpSsh.jsch.jce.SignatureRSA");
@@ -71,6 +77,11 @@ namespace Tamir.SharpSsh.jsch
             config.Add("random", "Tamir.SharpSsh.jsch.jce.Random");
 
             config.Add("aes128-cbc", "Tamir.SharpSsh.jsch.jce.AES128CBC");
+            config.Add("aes128-ctr", "Tamir.SharpSsh.jsch.jce.AES128CTR");
+            config.Add("aes192-cbc", "Tamir.SharpSsh.jsch.jce.AES192CBC");
+            config.Add("aes192-ctr", "Tamir.SharpSsh.jsch.jce.AES192CTR");
+            config.Add("aes256-cbc", "Tamir.SharpSsh.jsch.jce.AES256CBC");
+            config.Add("aes256-ctr", "Tamir.SharpSsh.jsch.jce.AES256CTR");
 
             config.Add("StrictHostKeyChecking", "ask");
         }

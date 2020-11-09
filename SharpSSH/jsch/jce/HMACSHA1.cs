@@ -33,63 +33,14 @@ namespace Tamir.SharpSsh.jsch.jce
     EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     */
 
-    public class HMACSHA1 : MAC
+    public class HMACSHA1 : HMAC
     {
-        private const String name = "hmac-sha1";
-        private const int bsize = 20;
-        private System.Security.Cryptography.HMACSHA1 mentalis_mac;
-        private CryptoStream cs;
-        private byte[] tmp = new byte[4];
-
-        public int getBlockSize()
+        public override String getName() { return "hmac-sha1"; }
+        public override int getBlockSize() { return 20; }
+        protected override System.Security.Cryptography.HMAC CreateHMAC(byte[] key)
         {
-            return bsize;
-        }
-
-        public void init(byte[] key)
-        {
-            if (key.Length > bsize)
-            {
-                byte[] tmp = new byte[bsize];
-                Array.Copy(key, 0, tmp, 0, bsize);
-                key = tmp;
-            }
-
-            mentalis_mac = new System.Security.Cryptography.HMACSHA1(key);
-            cs = new CryptoStream(Stream.Null, mentalis_mac, CryptoStreamMode.Write);
-        }
-
-        public void update(int i)
-        {
-            tmp[0] = (byte) (i >> 24);
-            tmp[1] = (byte) (i >> 16);
-            tmp[2] = (byte) (i >> 8);
-            tmp[3] = (byte) i;
-            update(tmp, 0, 4);
-        }
-
-        public void update(byte[] foo, int s, int l)
-        {
-            //mac.update(foo, s, l);      
-            cs.Write(foo, s, l);
-        }
-
-        public byte[] doFinal()
-        {
-            Console.WriteLine("Sha1");
-            //return mac.doFinal();
-            cs.Close();
-            byte[] result = mentalis_mac.Hash;
-            byte[] key = mentalis_mac.Key;
-            mentalis_mac.Clear();
-            init(key);
-
-            return result;
-        }
-
-        public String getName()
-        {
-            return name;
+            return new System.Security.Cryptography.HMACSHA1(key);
         }
     }
+
 }
