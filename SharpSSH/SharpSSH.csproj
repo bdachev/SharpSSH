@@ -164,6 +164,7 @@
     <Compile Include="jsch\DHG1.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="jsch\DHGEX256.cs" />
     <Compile Include="jsch\DHGEX.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -182,21 +183,30 @@
     <Compile Include="jsch\IO.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="jsch\jce\AES256CBC.cs" />
+    <Compile Include="jsch\jce\AES192CBC.cs" />
+    <Compile Include="jsch\jce\AES256CTR.cs" />
+    <Compile Include="jsch\jce\AES192CTR.cs" />
+    <Compile Include="jsch\jce\AES128CTR.cs" />
     <Compile Include="jsch\jce\AES128CBC.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AesCounterMode.cs" />
     <Compile Include="jsch\jce\BlowfishCBC.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\jce\DH.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="jsch\jce\HMAC.cs" />
     <Compile Include="jsch\jce\HMACMD5.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="jsch\jce\HMACMD596.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="jsch\jce\HMACSHA512.cs" />
+    <Compile Include="jsch\jce\HMACSHA256.cs" />
     <Compile Include="jsch\jce\HMACSHA1.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -215,6 +225,9 @@
     <Compile Include="jsch\jce\Random.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="jsch\jce\SHA512.cs" />
+    <Compile Include="jsch\jce\SHA384.cs" />
+    <Compile Include="jsch\jce\SHA256.cs" />
     <Compile Include="jsch\jce\SHA1.cs">
       <SubType>Code</SubType>
     </Compile>

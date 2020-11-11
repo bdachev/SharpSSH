@@ -53,7 +53,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             try
             {
                 //md=MessageDigest.getInstance("SHA-1");
-                md = new createHash();
+                md = createHash();
                 cs = new CryptoStream(Stream.Null, md, CryptoStreamMode.Write);
             }
             catch (Exception e)
